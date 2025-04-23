@@ -1,7 +1,8 @@
 # This module implements a handler for Go.
 
 from __future__ import annotations
-
+import subprocess
+import json
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, ClassVar
 
@@ -74,6 +75,24 @@ class GoHandler(BaseHandler):
 
     def collect(self, identifier: str, options: GoOptions) -> CollectorItem:  # noqa: ARG002
         """Collect data given an identifier and selection configuration."""
+        
+        result = subprocess.run(
+            ["go", "doc", "-json", identifier],
+            capture_output=True,
+            text=True,
+            check=True
+        )
+        data = json.loads(result.stdout)
+
+        # You could store the collected data for later alias resolution
+        self._collected[identifier] = data
+        return CollectorItem(
+            identifier=identifier,
+            data=data,
+            options=options
+        )
+
+
         # In the implementation, you either run a specialized tool in a subprocess
         # to capture its JSON output, that you load again in Python data structures,
         # or you parse the source code directly, for example with tree-sitter.
