@@ -25,7 +25,9 @@ if TYPE_CHECKING:
 # Function-scoped fixtures.
 # --------------------------------------------
 @pytest.fixture(name="mkdocs_conf")
-def fixture_mkdocs_conf(request: pytest.FixtureRequest, tmp_path: Path) -> Iterator[MkDocsConfig]:
+def fixture_mkdocs_conf(
+    request: pytest.FixtureRequest, tmp_path: Path
+) -> Iterator[MkDocsConfig]:
     """Yield a MkDocs configuration object.
 
     Parameters:
@@ -95,7 +97,9 @@ def fixture_session_mkdocs_conf(
     Yields:
         MkDocs config.
     """
-    with helpers.mkdocs_conf(request, tmp_path_factory.mktemp("project")) as mkdocs_conf:
+    with helpers.mkdocs_conf(
+        request, tmp_path_factory.mktemp("project")
+    ) as mkdocs_conf:
         yield mkdocs_conf
 
 
@@ -126,7 +130,9 @@ def fixture_session_ext_markdown(session_mkdocs_conf: MkDocsConfig) -> Markdown:
 
 
 @pytest.fixture(name="session_handler", scope="session")
-def fixture_session_handler(session_plugin: MkdocstringsPlugin, session_ext_markdown: Markdown) -> PythonHandler:
+def fixture_session_handler(
+    session_plugin: MkdocstringsPlugin, session_ext_markdown: Markdown
+) -> PythonHandler:
     """Return a handler instance.
 
     Parameters:

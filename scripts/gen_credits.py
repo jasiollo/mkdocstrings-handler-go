@@ -27,7 +27,12 @@ with project_dir.joinpath("pyproject.toml").open("rb") as pyproject_file:
     pyproject = tomllib.load(pyproject_file)
 project = pyproject["project"]
 project_name = project["name"]
-devdeps = [dep for group in pyproject["dependency-groups"].values() for dep in group if not dep.startswith("-e")]
+devdeps = [
+    dep
+    for group in pyproject["dependency-groups"].values()
+    for dep in group
+    if not dep.startswith("-e")
+]
 
 PackageMetadata = dict[str, Union[str, Iterable[str]]]
 Metadata = dict[str, PackageMetadata]
@@ -38,7 +43,9 @@ def _merge_fields(metadata: dict) -> PackageMetadata:
     for header, value in metadata.items():
         fields[header.lower()].append(value.strip())
     return {
-        field: value if len(value) > 1 or field in ("classifier", "requires-dist") else value[0]
+        field: value
+        if len(value) > 1 or field in ("classifier", "requires-dist")
+        else value[0]
         for field, value in fields.items()
     }
 
@@ -55,7 +62,11 @@ def _extra_marker(req: Requirement) -> str | None:
     if not req.marker:
         return None
     try:
-        return next(marker[2].value for marker in req.marker._markers if getattr(marker[0], "value", None) == "extra")
+        return next(
+            marker[2].value
+            for marker in req.marker._markers
+            if getattr(marker[0], "value", None) == "extra"
+        )
     except StopIteration:
         return None
 
@@ -74,8 +85,14 @@ def _get_metadata() -> Metadata:
 
 def _set_license(metadata: PackageMetadata) -> None:
     license_field = metadata.get("license-expression", metadata.get("license", ""))
-    license_name = license_field if isinstance(license_field, str) else " + ".join(license_field)
-    check_classifiers = license_name in ("UNKNOWN", "Dual License", "") or license_name.count("\n")
+    license_name = (
+        license_field if isinstance(license_field, str) else " + ".join(license_field)
+    )
+    check_classifiers = license_name in (
+        "UNKNOWN",
+        "Dual License",
+        "",
+    ) or license_name.count("\n")
     if check_classifiers:
         license_names = []
         for classifier in metadata["classifier"]:
@@ -107,9 +124,13 @@ def _get_deps(base_deps: dict[str, Requirement], metadata: Metadata) -> Metadata
                         dep_name in metadata
                         and dep_name not in deps
                         and dep_name != project["name"]
-                        and (not extra_marker or extra_marker in deps[pkg_name]["extras"])
+                        and (
+                            not extra_marker or extra_marker in deps[pkg_name]["extras"]
+                        )
                     ):
-                        metadata[dep_name]["spec"] |= {str(spec) for spec in requirement.specifier}  # type: ignore[operator]
+                        metadata[dep_name]["spec"] |= {
+                            str(spec) for spec in requirement.specifier
+                        }  # type: ignore[operator]
                         deps[dep_name] = metadata[dep_name]
                         again = True
 
@@ -131,8 +152,12 @@ def _render_credits() -> str:
 
     template_data = {
         "project_name": project_name,
-        "prod_dependencies": sorted(prod_dependencies.values(), key=lambda dep: str(dep["name"]).lower()),
-        "dev_dependencies": sorted(dev_dependencies.values(), key=lambda dep: str(dep["name"]).lower()),
+        "prod_dependencies": sorted(
+            prod_dependencies.values(), key=lambda dep: str(dep["name"]).lower()
+        ),
+        "dev_dependencies": sorted(
+            dev_dependencies.values(), key=lambda dep: str(dep["name"]).lower()
+        ),
         "more_credits": "",
     }
     template_text = dedent(

@@ -26,7 +26,9 @@ if TYPE_CHECKING:
         # TODO: add identifiers to this list!
     ],
 )
-def test_render_themes_templates_python(identifier: str, plugin: MkdocstringsPlugin, ext_markdown: Markdown) -> None:
+def test_render_themes_templates_python(
+    identifier: str, plugin: MkdocstringsPlugin, ext_markdown: Markdown
+) -> None:
     """Test rendering of a given theme's templates.
 
     Parameters:

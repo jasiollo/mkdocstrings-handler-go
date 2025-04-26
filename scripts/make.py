@@ -14,7 +14,7 @@ if TYPE_CHECKING:
     from collections.abc import Iterator
 
 # NOTE: pydantic is not compatible with Python 3.14 yet
-# PYTHON_VERSIONS = os.getenv("PYTHON_VERSIONS", "3.9 3.10 3.11 3.12 3.13 3.14").split() 
+# PYTHON_VERSIONS = os.getenv("PYTHON_VERSIONS", "3.9 3.10 3.11 3.12 3.13 3.14").split()
 
 PYTHON_VERSIONS = os.getenv("PYTHON_VERSIONS", "3.9 3.10 3.11 3.12 3.13").split()
 
@@ -41,7 +41,9 @@ def environ(**kwargs: str) -> Iterator[None]:
 
 def uv_install(venv: Path) -> None:
     """Install dependencies using uv."""
-    with environ(UV_PROJECT_ENVIRONMENT=str(venv), PYO3_USE_ABI3_FORWARD_COMPATIBILITY="1"):
+    with environ(
+        UV_PROJECT_ENVIRONMENT=str(venv), PYO3_USE_ABI3_FORWARD_COMPATIBILITY="1"
+    ):
         if "CI" in os.environ:
             shell("uv sync --no-editable")
         else:
@@ -51,7 +53,9 @@ def uv_install(venv: Path) -> None:
 def setup() -> None:
     """Setup the project."""
     if not shutil.which("uv"):
-        raise ValueError("make: setup: uv must be installed, see https://github.com/astral-sh/uv")
+        raise ValueError(
+            "make: setup: uv must be installed, see https://github.com/astral-sh/uv"
+        )
 
     print("Installing dependencies (default environment)")
     default_venv = Path(".venv")
@@ -103,7 +107,13 @@ def clean() -> None:
     for path in paths_to_clean:
         shutil.rmtree(path, ignore_errors=True)
 
-    cache_dirs = {".cache", ".pytest_cache", ".mypy_cache", ".ruff_cache", "__pycache__"}
+    cache_dirs = {
+        ".cache",
+        ".pytest_cache",
+        ".mypy_cache",
+        ".ruff_cache",
+        "__pycache__",
+    }
     for dirpath in Path(".").rglob("*/"):
         if dirpath.parts[0] not in (".venv", ".venvs") and dirpath.name in cache_dirs:
             shutil.rmtree(dirpath, ignore_errors=True)

@@ -4,10 +4,11 @@ import pytest
 
 # parsing non local go projects is currently out of scope
 # def test_collect_module(handler) -> None:
-    # """Assert existing module can be collected."""
-    # identifier = "github.com/gin-gonic/gin"
-    # handler.collect(identifier, config.GoOptions())
-    # assert handler._collected[identifier] is not None
+# """Assert existing module can be collected."""
+# identifier = "github.com/gin-gonic/gin"
+# handler.collect(identifier, config.GoOptions())
+# assert handler._collected[identifier] is not None
+
 
 def test_empty_id(handler):
     with pytest.raises(AttributeError):

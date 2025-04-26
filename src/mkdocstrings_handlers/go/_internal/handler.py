@@ -39,7 +39,14 @@ class GoHandler(BaseHandler):
     fallback_theme: ClassVar[str] = "material"
     """The theme to fallback to."""
 
-    def __init__(self, config: GoConfig, base_dir: Path, *, godocjson_path = "~/go/bin/godocjson", **kwargs: Any) -> None:
+    def __init__(
+        self,
+        config: GoConfig,
+        base_dir: Path,
+        *,
+        godocjson_path="~/go/bin/godocjson",
+        **kwargs: Any,
+    ) -> None:
         """Initialize the handler.
 
         Parameters:
@@ -69,7 +76,10 @@ class GoHandler(BaseHandler):
         Returns:
             The combined options.
         """
-        extra = {**self.global_options.get("extra", {}), **local_options.get("extra", {})}
+        extra = {
+            **self.global_options.get("extra", {}),
+            **local_options.get("extra", {}),
+        }
         options = {**self.global_options, **local_options, "extra": extra}
         try:
             return GoOptions.from_data(**options)
@@ -98,12 +108,7 @@ class GoHandler(BaseHandler):
 
         # You could store the collected data for later alias resolution
         self._collected[identifier] = data
-        return CollectorItem(
-            identifier=identifier,
-            data=data,
-            options=options
-        )
-
+        return CollectorItem(identifier=identifier, data=data, options=options)
 
         # In the implementation, you either run a specialized tool in a subprocess
         # to capture its JSON output, that you load again in Python data structures,
