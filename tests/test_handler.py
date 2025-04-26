@@ -1,6 +1,6 @@
 import pytest
 
-from src.mkdocstrings_handlers.go._internal import config
+from src.mkdocstrings_handlers.go._internal import config, handler
 
 # parsing non local go projects is currently out of scope
 # def test_collect_module(handler) -> None:
@@ -10,17 +10,17 @@ from src.mkdocstrings_handlers.go._internal import config
 # assert handler._collected[identifier] is not None
 
 
-def test_empty_id(handler):
+def test_empty_id(handler: handler.GoHandler) -> None:
     with pytest.raises(AttributeError):
         handler.collect("", config.GoOptions())
 
 
-def test_identifier_does_not_exist(handler):
+def test_identifier_does_not_exist(handler: handler.GoHandler) -> None:
     with pytest.raises(RuntimeError):
         handler.collect("noway/iamnothere", config.GoOptions())
 
 
-def test_collect_with_function_dock(tmp_path, handler):
+def test_collect_with_function_dock(tmp_path: callable, handler: handler.GoHandler) -> None:
     file_str = """
 package main
 
@@ -69,7 +69,7 @@ func Foo() {
     }
 
 
-def test_collect_with_package_dock(tmp_path, handler):
+def test_collect_with_package_dock(tmp_path: callable, handler: handler.GoHandler) -> None:
     file_str = """
 //package does stuff
 package main
@@ -113,7 +113,7 @@ func Foo() {
     }
 
 
-def test_collect_empty_file(tmp_path, handler):
+def test_collect_empty_file(tmp_path: callable, handler: handler.GoHandler) -> None:
     file_str = "package main"
     f = tmp_path / "bar.go"
     f.write_text(file_str, encoding="utf-8")
