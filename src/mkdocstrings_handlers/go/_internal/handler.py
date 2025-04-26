@@ -1,11 +1,12 @@
 # This module implements a handler for Go.
 
 from __future__ import annotations
-import subprocess
+
 import json
+import subprocess
+from os.path import expanduser
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, ClassVar
-from os.path import expanduser
 
 from mkdocs.exceptions import PluginError
 from mkdocstrings import BaseHandler, CollectionError, CollectorItem, get_logger
@@ -44,7 +45,7 @@ class GoHandler(BaseHandler):
         config: GoConfig,
         base_dir: Path,
         *,
-        godocjson_path="~/go/bin/godocjson",
+        godocjson_path: str ="~/go/bin/godocjson",
         **kwargs: Any,
     ) -> None:
         """Initialize the handler.
@@ -86,23 +87,21 @@ class GoHandler(BaseHandler):
         except Exception as error:
             raise PluginError(f"Invalid options: {error}") from error
 
-    def collect(self, identifier: str, options: GoOptions) -> CollectorItem:  # noqa: ARG002
+    def collect(self, identifier: str, options: GoOptions) -> CollectorItem:
         """Collect data given an identifier and selection configuration."""
-
         if not identifier:
             raise AttributeError("Identifier cannot be empty!\n")
         path = self.base_dir / identifier
         try:
-            result = subprocess.run(
+            result = subprocess.run(    # noqa: S603 i fount no way to fix S603 other than to not run anything
                 [expanduser(self.godocjson_path), str(path.parent)],
                 check=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
+                capture_output=True,
                 text=True,
             )
             data = json.loads(result.stdout)
             self._collected[identifier] = data
-            return data
+            return data  # noqa: TRY300 "Consider moving this statement to an `else` block" - what is bro even about?
         except subprocess.CalledProcessError as e:
             raise RuntimeError(f"godocjson failed:\n{e.stderr.strip()}") from e
 
