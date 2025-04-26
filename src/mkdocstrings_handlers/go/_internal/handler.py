@@ -5,6 +5,7 @@ import subprocess
 import json
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, ClassVar
+from os.path import expanduser
 
 from mkdocs.exceptions import PluginError
 from mkdocstrings import BaseHandler, CollectionError, CollectorItem, get_logger
@@ -83,14 +84,14 @@ class GoHandler(BaseHandler):
         path = self.base_dir / identifier
         try:
             result = subprocess.run(
-                [self.godocjson_path, str(path.parent)],
+                [expanduser(self.godocjson_path), str(path.parent)],
                 check=True,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 text=True,
             )
             data = json.loads(result.stdout)
-            self.collected[identifier] = data
+            self._collected[identifier] = data
             return data
         except subprocess.CalledProcessError as e:
             raise RuntimeError(f"godocjson failed:\n{e.stderr.strip()}") from e
