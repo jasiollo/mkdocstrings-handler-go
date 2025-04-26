@@ -30,6 +30,7 @@ classifiers = [
     "Typing :: Typed",
 ]
 dependencies = [
+    "mkdocs-llmstxt>=0.2.0",
     "mkdocstrings>=0.18",
 ]
 
