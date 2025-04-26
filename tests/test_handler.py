@@ -1,6 +1,6 @@
-from src.mkdocstrings_handlers.go._internal import config
 import pytest
 
+from src.mkdocstrings_handlers.go._internal import config
 
 # parsing non local go projects is currently out of scope
 # def test_collect_module(handler) -> None:
@@ -64,7 +64,7 @@ func Foo() {
                 "results": [],
                 "recv": "",
                 "orig": "",
-            }
+            },
         ],
     }
 
@@ -108,7 +108,7 @@ func Foo() {
                 "results": [],
                 "recv": "",
                 "orig": "",
-            }
+            },
         ],
     }
 

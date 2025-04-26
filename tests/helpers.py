@@ -16,7 +16,6 @@ if TYPE_CHECKING:
     import pytest
     from mkdocstrings import MkdocstringsPlugin
 
-    from mkdocstrings_handlers.python import PythonHandler
     from mkdocstrings_handlers.go import GoHandler
 
 

@@ -17,8 +17,8 @@ if TYPE_CHECKING:
     from mkdocs.config.defaults import MkDocsConfig
     from mkdocstrings import MkdocstringsPlugin
 
-    from mkdocstrings_handlers.python import PythonHandler
     from mkdocstrings_handlers.go import GoHandler
+    from mkdocstrings_handlers.python import PythonHandler
 
 
 # --------------------------------------------
