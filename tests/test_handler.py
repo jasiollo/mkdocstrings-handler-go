@@ -1,6 +1,6 @@
 import pytest
 
-from src.mkdocstrings_handlers.go._internal import config, handler
+from mkdocstrings_handlers.go._internal import config, handler
 
 # parsing non local go projects is currently out of scope
 # def test_collect_module(handler) -> None:
