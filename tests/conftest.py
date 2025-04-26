@@ -18,6 +18,7 @@ if TYPE_CHECKING:
     from mkdocstrings import MkdocstringsPlugin
 
     from mkdocstrings_handlers.python import PythonHandler
+    from mkdocstrings_handlers.go import GoHandler
 
 
 # --------------------------------------------
@@ -65,7 +66,7 @@ def fixture_ext_markdown(mkdocs_conf: MkDocsConfig) -> Markdown:
 
 
 @pytest.fixture(name="handler")
-def fixture_handler(plugin: MkdocstringsPlugin, ext_markdown: Markdown) -> PythonHandler:
+def fixture_handler(plugin: MkdocstringsPlugin, ext_markdown: Markdown) -> GoHandler:
     """Return a handler instance.
 
     Parameters:

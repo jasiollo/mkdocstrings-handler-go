@@ -17,6 +17,7 @@ if TYPE_CHECKING:
     from mkdocstrings import MkdocstringsPlugin
 
     from mkdocstrings_handlers.python import PythonHandler
+    from mkdocstrings_handlers.go import GoHandler
 
 
 @contextmanager
@@ -83,7 +84,7 @@ def ext_markdown(mkdocs_conf: MkDocsConfig) -> Markdown:
     return Markdown(extensions=mkdocs_conf["markdown_extensions"], extension_configs=mkdocs_conf["mdx_configs"])
 
 
-def handler(plugin: MkdocstringsPlugin, ext_markdown: Markdown) -> PythonHandler:
+def handler(plugin: MkdocstringsPlugin, ext_markdown: Markdown) -> GoHandler:
     """Return a handler instance.
 
     Parameters:
@@ -92,6 +93,6 @@ def handler(plugin: MkdocstringsPlugin, ext_markdown: Markdown) -> PythonHandler
     Returns:
         A handler instance.
     """
-    handler = plugin.handlers.get_handler("python")
+    handler = plugin.handlers.get_handler("go")
     handler._update_env(ext_markdown)
     return handler  # type: ignore[return-value]
