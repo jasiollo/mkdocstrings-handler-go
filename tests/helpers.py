@@ -21,9 +21,7 @@ if TYPE_CHECKING:
 
 
 @contextmanager
-def mkdocs_conf(
-    request: pytest.FixtureRequest, tmp_path: Path
-) -> Iterator[MkDocsConfig]:
+def mkdocs_conf(request: pytest.FixtureRequest, tmp_path: Path) -> Iterator[MkDocsConfig]:
     """Yield a MkDocs configuration object.
 
     Parameters:
@@ -33,9 +31,7 @@ def mkdocs_conf(
     Yields:
         MkDocs config.
     """
-    while hasattr(request, "_parent_request") and hasattr(
-        request._parent_request, "_parent_request"
-    ):
+    while hasattr(request, "_parent_request") and hasattr(request._parent_request, "_parent_request"):
         request = request._parent_request
 
     params = getattr(request, "param", {})
@@ -50,9 +46,7 @@ def mkdocs_conf(
         **getattr(request, "param", {}),
     }
     # Re-create it manually as a workaround for https://github.com/mkdocs/mkdocs/issues/2289
-    mdx_configs: dict[str, Any] = dict(
-        ChainMap(*conf_dict.get("markdown_extensions", []))
-    )
+    mdx_configs: dict[str, Any] = dict(ChainMap(*conf_dict.get("markdown_extensions", [])))
 
     conf.load_dict(conf_dict)
     assert conf.validate() == ([], [])

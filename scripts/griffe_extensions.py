@@ -35,9 +35,7 @@ class CustomFields(griffe.Extension):
                 if isinstance(attr, griffe.ExprKeyword) and attr.name == "description"
             )
             if not isinstance(description, str):
-                _logger.warning(
-                    f"Field description of {attr.path} is not a static string"
-                )
+                _logger.warning(f"Field description of {attr.path} is not a static string")
                 description = str(description)
 
             attr.docstring = griffe.Docstring(

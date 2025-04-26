@@ -41,9 +41,7 @@ def environ(**kwargs: str) -> Iterator[None]:
 
 def uv_install(venv: Path) -> None:
     """Install dependencies using uv."""
-    with environ(
-        UV_PROJECT_ENVIRONMENT=str(venv), PYO3_USE_ABI3_FORWARD_COMPATIBILITY="1"
-    ):
+    with environ(UV_PROJECT_ENVIRONMENT=str(venv), PYO3_USE_ABI3_FORWARD_COMPATIBILITY="1"):
         if "CI" in os.environ:
             shell("uv sync --no-editable")
         else:
@@ -53,9 +51,7 @@ def uv_install(venv: Path) -> None:
 def setup() -> None:
     """Setup the project."""
     if not shutil.which("uv"):
-        raise ValueError(
-            "make: setup: uv must be installed, see https://github.com/astral-sh/uv"
-        )
+        raise ValueError("make: setup: uv must be installed, see https://github.com/astral-sh/uv")
 
     print("Installing dependencies (default environment)")
     default_venv = Path(".venv")

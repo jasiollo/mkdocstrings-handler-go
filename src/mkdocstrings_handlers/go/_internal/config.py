@@ -63,9 +63,7 @@ try:
     ) -> None:
         def _add_markdown_description(schema: dict[str, Any]) -> None:
             url = f"{_base_url}/{f'configuration/{group}/' if group else ''}#{parent or schema['title']}"
-            schema["markdownDescription"] = (
-                f"[DOCUMENTATION]({url})\n\n{schema['description']}"
-            )
+            schema["markdownDescription"] = f"[DOCUMENTATION]({url})\n\n{schema['description']}"
 
         return BaseField(
             *args,
@@ -179,9 +177,7 @@ class GoInputConfig:
     # We want to validate options early, so we load them as `GoInputOptions`.
     options: Annotated[
         GoInputOptions,
-        _Field(
-            description="Configuration options for collecting and rendering objects."
-        ),
+        _Field(description="Configuration options for collecting and rendering objects."),
     ] = field(default_factory=GoInputOptions)
 
     docstring_options: Annotated[

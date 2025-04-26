@@ -97,9 +97,7 @@ def _print_debug_info() -> None:
     """Print debug/environment information."""
     info = _get_debug_info()
     print(f"- __System__: {info.platform}")
-    print(
-        f"- __Python__: {info.interpreter_name} {info.interpreter_version} ({info.interpreter_path})"
-    )
+    print(f"- __Python__: {info.interpreter_name} {info.interpreter_version} ({info.interpreter_path})")
     print("- __Environment variables__:")
     for var in info.variables:
         print(f"  - `{var.name}`: `{var.value}`")

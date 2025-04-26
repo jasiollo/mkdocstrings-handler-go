@@ -48,11 +48,7 @@ def material_insiders() -> Iterator[bool]:
 
 def _get_changelog_version() -> str:
     changelog_version_re = re.compile(r"^## \[(\d+\.\d+\.\d+)\].*$")
-    with (
-        Path(__file__)
-        .parent.joinpath("CHANGELOG.md")
-        .open("r", encoding="utf8") as file
-    ):
+    with Path(__file__).parent.joinpath("CHANGELOG.md").open("r", encoding="utf8") as file:
         return next(filter(bool, map(changelog_version_re.match, file))).group(1)  # type: ignore[union-attr]
 
 
@@ -112,7 +108,9 @@ def check_api(ctx: Context, *cli_args: str) -> None:
     """Check for API breaking changes."""
     ctx.run(
         tools.griffe.check(
-            "mkdocstrings_handlers.go", search=["src"], color=True
+            "mkdocstrings_handlers.go",
+            search=["src"],
+            color=True,
         ).add_args(*cli_args),
         title="Checking for API breaking changes",
         nofail=True,
@@ -120,9 +118,7 @@ def check_api(ctx: Context, *cli_args: str) -> None:
 
 
 @duty
-def docs(
-    ctx: Context, *cli_args: str, host: str = "127.0.0.1", port: int = 8000
-) -> None:
+def docs(ctx: Context, *cli_args: str, host: str = "127.0.0.1", port: int = 8000) -> None:
     """Serve the documentation (localhost:8000).
 
     Parameters:
@@ -154,9 +150,7 @@ def docs_deploy(ctx: Context) -> None:
 def format(ctx: Context) -> None:
     """Run formatting tools on the code."""
     ctx.run(
-        tools.ruff.check(
-            *PY_SRC_LIST, config="config/ruff.toml", fix_only=True, exit_zero=True
-        ),
+        tools.ruff.check(*PY_SRC_LIST, config="config/ruff.toml", fix_only=True, exit_zero=True),
         title="Auto-fixing code",
     )
     ctx.run(
