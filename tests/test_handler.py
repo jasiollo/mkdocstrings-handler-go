@@ -1,7 +1,63 @@
 from src.mkdocstrings_handlers.go._internal import config
+import pytest
 
-def test_collect_module(handler) -> None:
-    """Assert existing module can be collected."""
-    identifier = "github.com/gin-gonic/gin"
-    handler.collect(identifier, config.GoOptions())
-    assert handler._collected[identifier] is not None
+
+# parsing non local go projects is currently out of scope
+# def test_collect_module(handler) -> None:
+    # """Assert existing module can be collected."""
+    # identifier = "github.com/gin-gonic/gin"
+    # handler.collect(identifier, config.GoOptions())
+    # assert handler._collected[identifier] is not None
+
+def test_empty_id(handler):
+    with pytest.raises(AttributeError):
+        handler.collect("", config.GoOptions())
+
+
+def test_collect_with_function_dock(tmp_path, handler):
+    file_str = """
+package main
+
+//  foo bar function
+// this does not newline in dockcomment
+//
+//	there go the arguments
+//
+// something something description
+func Foo() {
+	return
+}
+"""
+    f = tmp_path / "bar.go"
+    f.write_text(file_str, encoding="utf-8")
+
+    handler.collect(tmp_path / "bar.go", config.GoOptions())
+
+    assert handler._collected[tmp_path / "bar.go"] == {
+        "type": "package",
+        "doc": "",
+        "name": "main",
+        "importPath": str(tmp_path),
+        "imports": [],
+        "filenames": [str(tmp_path / "bar.go")],
+        "notes": {},
+        "bugs": None,
+        "consts": [],
+        "types": [],
+        "vars": [],
+        "funcs": [
+            {
+                "doc": " foo bar function\nthis does not newline in dockcomment\n\n\tthere go the arguments\n\nsomething something description\n",
+                "name": "Foo",
+                "packageName": "main",
+                "packageImportPath": str(tmp_path),
+                "type": "func",
+                "filename": str(tmp_path / "bar.go"),
+                "line": 10,
+                "parameters": [],
+                "results": [],
+                "recv": "",
+                "orig": "",
+            }
+        ],
+    }
