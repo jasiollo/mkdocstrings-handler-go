@@ -1,4 +1,5 @@
 import pytest
+import pathlib
 
 from mkdocstrings_handlers.go._internal import config, handler
 
@@ -20,7 +21,7 @@ def test_identifier_does_not_exist(handler: handler.GoHandler) -> None:
         handler.collect("noway/iamnothere", config.GoOptions())
 
 
-def test_collect_with_function_dock(tmp_path: callable, handler: handler.GoHandler) -> None:
+def test_collect_with_function_dock(tmp_path: pathlib.Path, handler: handler.GoHandler) -> None:
     file_str = """
 package main
 
@@ -37,9 +38,9 @@ func Foo() {
     f = tmp_path / "bar.go"
     f.write_text(file_str, encoding="utf-8")
 
-    handler.collect(tmp_path / "bar.go", config.GoOptions())
+    handler.collect(str(tmp_path / "bar.go"), config.GoOptions())
 
-    assert handler._collected[tmp_path / "bar.go"] == {
+    assert handler._collected[str(tmp_path/ "bar.go")] == {
         "type": "package",
         "doc": "",
         "name": "main",
@@ -69,7 +70,7 @@ func Foo() {
     }
 
 
-def test_collect_with_package_dock(tmp_path: callable, handler: handler.GoHandler) -> None:
+def test_collect_with_package_dock(tmp_path: pathlib.Path, handler: handler.GoHandler) -> None:
     file_str = """
 //package does stuff
 package main
@@ -81,9 +82,9 @@ func Foo() {
     f = tmp_path / "bar.go"
     f.write_text(file_str, encoding="utf-8")
 
-    handler.collect(tmp_path / "bar.go", config.GoOptions())
+    handler.collect(str(tmp_path / "bar.go"), config.GoOptions())
 
-    assert handler._collected[tmp_path / "bar.go"] == {
+    assert handler._collected[str(tmp_path / "bar.go")] == {
         "type": "package",
         "doc": "package does stuff\n",
         "name": "main",
@@ -113,14 +114,14 @@ func Foo() {
     }
 
 
-def test_collect_empty_file(tmp_path: callable, handler: handler.GoHandler) -> None:
+def test_collect_empty_file(tmp_path: pathlib.Path, handler: handler.GoHandler) -> None:
     file_str = "package main"
     f = tmp_path / "bar.go"
     f.write_text(file_str, encoding="utf-8")
 
-    handler.collect(tmp_path / "bar.go", config.GoOptions())
+    handler.collect(str(tmp_path / "bar.go"), config.GoOptions())
 
-    assert handler._collected[tmp_path / "bar.go"] == {
+    assert handler._collected[str(tmp_path / "bar.go")] == {
         "type": "package",
         "doc": "",
         "name": "main",
