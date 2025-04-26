@@ -14,6 +14,11 @@ def test_empty_id(handler):
         handler.collect("", config.GoOptions())
 
 
+def test_identifier_does_not_exist(handler):
+    with pytest.raises(RuntimeError):
+        handler.collect("noway/iamnothere", config.GoOptions())
+
+
 def test_collect_with_function_dock(tmp_path, handler):
     file_str = """
 package main
@@ -60,4 +65,71 @@ func Foo() {
                 "orig": "",
             }
         ],
+    }
+
+
+def test_collect_with_package_dock(tmp_path, handler):
+    file_str = """
+//package does stuff
+package main
+
+func Foo() {
+	return
+}
+"""
+    f = tmp_path / "bar.go"
+    f.write_text(file_str, encoding="utf-8")
+
+    handler.collect(tmp_path / "bar.go", config.GoOptions())
+
+    assert handler._collected[tmp_path / "bar.go"] == {
+        "type": "package",
+        "doc": "package does stuff\n",
+        "name": "main",
+        "importPath": str(tmp_path),
+        "imports": [],
+        "filenames": [str(tmp_path / "bar.go")],
+        "notes": {},
+        "bugs": None,
+        "consts": [],
+        "types": [],
+        "vars": [],
+        "funcs": [
+            {
+                "doc": "",
+                "name": "Foo",
+                "packageName": "main",
+                "packageImportPath": str(tmp_path),
+                "type": "func",
+                "filename": str(tmp_path / "bar.go"),
+                "line": 5,
+                "parameters": [],
+                "results": [],
+                "recv": "",
+                "orig": "",
+            }
+        ],
+    }
+
+
+def test_collect_empty_file(tmp_path, handler):
+    file_str = "package main"
+    f = tmp_path / "bar.go"
+    f.write_text(file_str, encoding="utf-8")
+
+    handler.collect(tmp_path / "bar.go", config.GoOptions())
+
+    assert handler._collected[tmp_path / "bar.go"] == {
+        "type": "package",
+        "doc": "",
+        "name": "main",
+        "importPath": str(tmp_path),
+        "imports": [],
+        "filenames": [str(tmp_path / "bar.go")],
+        "notes": {},
+        "bugs": None,
+        "consts": [],
+        "types": [],
+        "vars": [],
+        "funcs": [],
     }
