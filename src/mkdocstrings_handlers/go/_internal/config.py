@@ -73,7 +73,7 @@ try:
             **kwargs,
         )
 except ImportError:
-    from dataclasses import dataclass #noqa: I001 # type: ignore[no-redef]
+    from dataclasses import dataclass # type: ignore[no-redef] #noqa: I001
     # # two different dataclass classes, at no point are both used at the same time
     # ruff formatting breaks ignore comment
 
