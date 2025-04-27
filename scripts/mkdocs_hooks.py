@@ -23,7 +23,7 @@ _logger = get_plugin_logger(__name__)
 
 def on_post_build(config: MkDocsConfig, **kwargs: Any) -> None:  # noqa: ARG001
     """Write `schema.json` to the site directory."""
-    if typeAdapter_unavailable:
+    if type_adapter_unavailable:
         _logger.info("Pydantic is not installed, skipping JSON schema generation")
         return
 
