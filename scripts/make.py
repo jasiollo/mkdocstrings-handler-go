@@ -119,6 +119,11 @@ def vscode() -> None:
     """Configure VSCode to work on this project."""
     shutil.copytree("config/vscode", ".vscode", dirs_exist_ok=True)
 
+def godocjson() -> None:
+    subprocess.run(["/usr/bin/rm", "-rf", "/usr/local/go"])     # noqa: S603, PLW1510
+    subprocess.run(["/usr/bin/wget", "https://golang.org/dl/go1.24.2.linux-amd64.tar.gz"])  # noqa: S603, PLW1510
+    subprocess.run(["/usr/bin/tar", "-C", "/usr/local",  "-xzf",  "go1.24.2.linux-amd64.tar.gz"])  # noqa: S603, PLW1510
+    subprocess.run(["/usr/bin/go", "install", "github.com/rtfd/godocjson@latest"])  # noqa: S603, PLW1510
 
 def main() -> int:
     """Main entry point."""
@@ -177,6 +182,8 @@ def main() -> int:
             setup()
         elif cmd == "vscode":
             vscode()
+        elif cmd == "install-godocjson":
+            godocjson()
         elif cmd == "check":
             multirun("duty", "check-quality", "check-types", "check-docs")
             run("default", "duty", "check-api")

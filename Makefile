@@ -21,7 +21,8 @@ actions = \
 	run \
 	setup \
 	test \
-	vscode
+	vscode \
+	install-godocjson
 
 .PHONY: $(actions)
 $(actions):
