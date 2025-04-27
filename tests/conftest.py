@@ -18,8 +18,6 @@ if TYPE_CHECKING:
     from mkdocstrings import MkdocstringsPlugin
 
     from mkdocstrings_handlers.go import GoHandler
-    from mkdocstrings_handlers.python import PythonHandler
-
 
 # --------------------------------------------
 # Function-scoped fixtures.
@@ -126,7 +124,7 @@ def fixture_session_ext_markdown(session_mkdocs_conf: MkDocsConfig) -> Markdown:
 
 
 @pytest.fixture(name="session_handler", scope="session")
-def fixture_session_handler(session_plugin: MkdocstringsPlugin, session_ext_markdown: Markdown) -> PythonHandler:
+def fixture_session_handler(session_plugin: MkdocstringsPlugin, session_ext_markdown: Markdown) -> GoHandler:
     """Return a handler instance.
 
     Parameters:
