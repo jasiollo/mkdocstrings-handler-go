@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import os
+import platform
 import shutil
 import subprocess
 import sys
@@ -120,6 +121,9 @@ def vscode() -> None:
     shutil.copytree("config/vscode", ".vscode", dirs_exist_ok=True)
 
 def godocjson() -> None:
+    if platform.system() == "Windows":
+        subprocess.run("./install_golang.ps1", "-version", "1.24.2") # noqa: S603, PLW1510
+        subprocess.run(["C:\go1.24.2\\bin\go.exe", "install", "github.com/rtfd/godocjson@latest"])  # noqa: S603, PLW1510, S607
     subprocess.run(["/bin/rm", "-rf", "/usr/local/go"])     # noqa: S603, PLW1510
     subprocess.run(["/bin/wget", "https://golang.org/dl/go1.24.2.linux-amd64.tar.gz"])  # noqa: S603, PLW1510
     subprocess.run(["/bin/sudo", "/usr/bin/tar", "-C", "/usr/local",  "-xzf",  "go1.24.2.linux-amd64.tar.gz"])  # noqa: S603, PLW1510
