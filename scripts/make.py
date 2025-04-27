@@ -120,9 +120,9 @@ def vscode() -> None:
     shutil.copytree("config/vscode", ".vscode", dirs_exist_ok=True)
 
 def godocjson() -> None:
-    subprocess.run(["/usr/bin/rm", "-rf", "/usr/local/go"])     # noqa: S603, PLW1510
-    subprocess.run(["/usr/bin/wget", "https://golang.org/dl/go1.24.2.linux-amd64.tar.gz"])  # noqa: S603, PLW1510
-    subprocess.run(["/usr/bin/sudo", "/usr/bin/tar", "-C", "/usr/local",  "-xzf",  "go1.24.2.linux-amd64.tar.gz"])  # noqa: S603, PLW1510
+    subprocess.run(["/bin/rm", "-rf", "/usr/local/go"])     # noqa: S603, PLW1510
+    subprocess.run(["/bin/wget", "https://golang.org/dl/go1.24.2.linux-amd64.tar.gz"])  # noqa: S603, PLW1510
+    subprocess.run(["/bin/sudo", "/usr/bin/tar", "-C", "/usr/local",  "-xzf",  "go1.24.2.linux-amd64.tar.gz"])  # noqa: S603, PLW1510
     subprocess.run(["/usr/local/go/bin/go", "install", "github.com/rtfd/godocjson@latest"])  # noqa: S603, PLW1510
 
 def main() -> int:
