@@ -1,5 +1,6 @@
-import pytest
 import pathlib
+
+import pytest
 
 from mkdocstrings_handlers.go._internal import config, handler
 
