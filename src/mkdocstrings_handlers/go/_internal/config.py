@@ -73,7 +73,9 @@ try:
             **kwargs,
         )
 except ImportError:
-    from dataclasses import dataclass               # type: ignore[no-redef] # two different dataclass classes, at no point are both used at the same time
+    from dataclasses import dataclass #noqa: I001 # type: ignore[no-redef]
+    # # two different dataclass classes, at no point are both used at the same time
+    # ruff formatting breaks ignore comment
 
     def _Field(*args: Any, **kwargs: Any) -> None:  # type: ignore[misc]  # noqa: N802
         pass
