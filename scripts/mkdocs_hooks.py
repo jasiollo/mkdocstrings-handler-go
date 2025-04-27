@@ -14,7 +14,7 @@ from mkdocstrings_handlers.go._internal.config import GoInputConfig, GoInputOpti
 try:
     from pydantic import TypeAdapter
 except ImportError:
-    TypeAdapter = None
+    typeAdapter_unavailable = True
 
 
 _logger = get_plugin_logger(__name__)
@@ -22,7 +22,7 @@ _logger = get_plugin_logger(__name__)
 
 def on_post_build(config: MkDocsConfig, **kwargs: Any) -> None:  # noqa: ARG001
     """Write `schema.json` to the site directory."""
-    if TypeAdapter is None:
+    if typeAdapter_unavailable:
         _logger.info("Pydantic is not installed, skipping JSON schema generation")
         return
 
