@@ -45,7 +45,6 @@ jobs:
 
     - name: Install godocjson
       run: make install-godocjson
-      become: yes
 
     - name: Check if the documentation builds correctly
       run: make check-docs
