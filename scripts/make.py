@@ -126,7 +126,7 @@ def godocjson() -> None:
         if os.path.exists("C:\\"):
             subprocess.run(["C:\\go1.24.2\\bin\\go.exe", "install", "github.com/rtfd/godocjson@latest"])  # noqa: S603 ,PLW1510
         else:
-            subprocess.run(["D:\\go1.24.2\\bin\\go.exe", "install", "github.com/rtfd/godocjson@latest"])
+            subprocess.run(["D:\\go1.24.2\\bin\\go.exe", "install", "github.com/rtfd/godocjson@latest"]) # noqa: S603 ,PLW1510
     if platform.system() == "Linux":
         subprocess.run(["/bin/rm", "-rf", "/usr/local/go"])     # noqa: S603, PLW1510
         subprocess.run(["/bin/wget", "https://golang.org/dl/go1.24.2.linux-amd64.tar.gz"])  # noqa: S603, PLW1510
