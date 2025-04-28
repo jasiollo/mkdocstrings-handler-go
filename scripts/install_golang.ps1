@@ -51,7 +51,17 @@ $downloadDir = $env:TEMP
 $packageName = 'golang'
 $url32 = 'https://storage.googleapis.com/golang/go' + $version + '.windows-386.zip'
 $url64 = 'https://storage.googleapis.com/golang/go' + $version + '.windows-amd64.zip'
-$goroot = "C:\go$version"
+$driveLetters= (Get-Volume).DriveLetter
+if (Test-Path "C:\")
+{
+    $goroot = "C:\go$version"
+}
+else
+{
+    # github ci uses d drive as system drive
+    $goroot = "D:\go$version"
+}
+
 
 # Determine type of system
 if ($ENV:PROCESSOR_ARCHITECTURE -eq "AMD64") {
