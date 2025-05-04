@@ -5,6 +5,7 @@ import subprocess
 import json
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, ClassVar
+from os.path import expanduser
 
 from mkdocs.exceptions import PluginError
 from mkdocstrings import BaseHandler, CollectionError, CollectorItem, get_logger
@@ -38,7 +39,7 @@ class GoHandler(BaseHandler):
     fallback_theme: ClassVar[str] = "material"
     """The theme to fallback to."""
 
-    def __init__(self, config: GoConfig, base_dir: Path, **kwargs: Any) -> None:
+    def __init__(self, config: GoConfig, base_dir: Path, *, godocjson_path = "~/go/bin/godocjson", **kwargs: Any) -> None:
         """Initialize the handler.
 
         Parameters:
@@ -54,6 +55,8 @@ class GoHandler(BaseHandler):
         """The base directory of the project."""
         self.global_options = config.options
         """The global configuration options."""
+        self.godocjson_path = godocjson_path
+        """The path to go parser"""
 
         self._collected: dict[str, CollectorItem] = {}
 
@@ -75,14 +78,23 @@ class GoHandler(BaseHandler):
 
     def collect(self, identifier: str, options: GoOptions) -> CollectorItem:  # noqa: ARG002
         """Collect data given an identifier and selection configuration."""
-        
-        result = subprocess.run(
-            ["go", "doc", "-json", identifier],
-            capture_output=True,
-            text=True,
-            check=True
-        )
-        data = json.loads(result.stdout)
+
+        if not identifier:
+            raise AttributeError("Identifier cannot be empty!\n")
+        path = self.base_dir / identifier
+        try:
+            result = subprocess.run(
+                [expanduser(self.godocjson_path), str(path.parent)],
+                check=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            data = json.loads(result.stdout)
+            self._collected[identifier] = data
+            return data
+        except subprocess.CalledProcessError as e:
+            raise RuntimeError(f"godocjson failed:\n{e.stderr.strip()}") from e
 
         # You could store the collected data for later alias resolution
         self._collected[identifier] = data

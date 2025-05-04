@@ -180,6 +180,25 @@ class GoInputConfig:
         _Field(description="Configuration options for collecting and rendering objects."),
     ] = field(default_factory=GoInputOptions)
 
+    docstring_options: Annotated[
+        None,
+        _Field(
+            group="docstrings",
+            description="""The options for the docstring parser.
+
+            See [docstring parsers](https://mkdocstrings.github.io/griffe/reference/docstrings/) and their options in Griffe docs.
+            """,
+        ),
+    ] = None
+
+    docstring_style: Annotated[
+        None,
+        _Field(
+            group="docstrings",
+            description="The docstring style to use: `auto`, `google`, `numpy`, `sphinx`, or `None`.",
+        ),
+    ] = None
+
     @classmethod
     def coerce(cls, **data: Any) -> MutableMapping[str, Any]:
         """Coerce data."""
