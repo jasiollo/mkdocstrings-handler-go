@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import os
+import platform
 import shutil
 import subprocess
 import sys
@@ -14,7 +15,7 @@ if TYPE_CHECKING:
     from collections.abc import Iterator
 
 # NOTE: pydantic is not compatible with Python 3.14 yet
-# PYTHON_VERSIONS = os.getenv("PYTHON_VERSIONS", "3.9 3.10 3.11 3.12 3.13 3.14").split() 
+# PYTHON_VERSIONS = os.getenv("PYTHON_VERSIONS", "3.9 3.10 3.11 3.12 3.13 3.14").split()
 
 PYTHON_VERSIONS = os.getenv("PYTHON_VERSIONS", "3.9 3.10 3.11 3.12 3.13").split()
 
@@ -103,7 +104,13 @@ def clean() -> None:
     for path in paths_to_clean:
         shutil.rmtree(path, ignore_errors=True)
 
-    cache_dirs = {".cache", ".pytest_cache", ".mypy_cache", ".ruff_cache", "__pycache__"}
+    cache_dirs = {
+        ".cache",
+        ".pytest_cache",
+        ".mypy_cache",
+        ".ruff_cache",
+        "__pycache__",
+    }
     for dirpath in Path(".").rglob("*/"):
         if dirpath.parts[0] not in (".venv", ".venvs") and dirpath.name in cache_dirs:
             shutil.rmtree(dirpath, ignore_errors=True)
@@ -113,6 +120,19 @@ def vscode() -> None:
     """Configure VSCode to work on this project."""
     shutil.copytree("config/vscode", ".vscode", dirs_exist_ok=True)
 
+def godocjson() -> None:
+    if platform.system() == "Windows":
+        subprocess.run(["powershell", "-Command","Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope LocalMachine -Confirm:$false"]) # noqa: S603, S607, PLW1510
+        subprocess.run(["powershell", "-Command",". ./scripts/install_golang.ps1 -version 1.24.2"]) # noqa: S603, S607, PLW1510
+        if os.path.exists("C:/"):
+            subprocess.run(["C:/go1.24.2/bin/go.exe", "install", "github.com/rtfd/godocjson@latest"])  # noqa: S603 ,PLW1510
+        else:
+            subprocess.run(["D:/go1.24.2/bin/go.exe", "install", "github.com/rtfd/godocjson@latest"]) # noqa: S603 ,PLW1510
+    if platform.system() == "Linux":
+        subprocess.run(["/bin/rm", "-rf", "/usr/local/go"])     # noqa: S603, PLW1510
+        subprocess.run(["/bin/wget", "https://golang.org/dl/go1.24.2.linux-amd64.tar.gz"])  # noqa: S603, PLW1510
+        subprocess.run(["/bin/sudo", "/usr/bin/tar", "-C", "/usr/local",  "-xzf",  "go1.24.2.linux-amd64.tar.gz"])  # noqa: S603, PLW1510
+        subprocess.run(["/usr/local/go/bin/go", "install", "github.com/rtfd/godocjson@latest"])  # noqa: S603, PLW1510
 
 def main() -> int:
     """Main entry point."""
@@ -171,6 +191,8 @@ def main() -> int:
             setup()
         elif cmd == "vscode":
             vscode()
+        elif cmd == "install-godocjson":
+            godocjson()
         elif cmd == "check":
             multirun("duty", "check-quality", "check-types", "check-docs")
             run("default", "duty", "check-api")

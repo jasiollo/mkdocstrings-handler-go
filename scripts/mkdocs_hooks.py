@@ -13,8 +13,9 @@ from mkdocstrings_handlers.go._internal.config import GoInputConfig, GoInputOpti
 # TODO: Update when Pydantic supports Python 3.14 (sources and duties as well).
 try:
     from pydantic import TypeAdapter
+    type_adapter_unavailable = False
 except ImportError:
-    TypeAdapter = None
+    type_adapter_unavailable = True
 
 
 _logger = get_plugin_logger(__name__)
@@ -22,7 +23,7 @@ _logger = get_plugin_logger(__name__)
 
 def on_post_build(config: MkDocsConfig, **kwargs: Any) -> None:  # noqa: ARG001
     """Write `schema.json` to the site directory."""
-    if TypeAdapter is None:
+    if type_adapter_unavailable:
         _logger.info("Pydantic is not installed, skipping JSON schema generation")
         return
 
@@ -38,9 +39,9 @@ def on_post_build(config: MkDocsConfig, **kwargs: Any) -> None:  # noqa: ARG001
         _logger.debug("Generated JSON schema")
 
     autorefs = config["plugins"]["autorefs"]
-    for field in fields(GoInputConfig):  # type: ignore[arg-type]
+    for field in fields(GoInputConfig):
         if f"setting-{field.name}" not in autorefs._primary_url_map:
             _logger.warning(f"Handler setting `{field.name}` is not documented")
-    for field in fields(GoInputOptions):  # type: ignore[arg-type]
+    for field in fields(GoInputOptions):
         if f"option-{field.name}" not in autorefs._primary_url_map:
             _logger.warning(f"Configuration option `{field.name}` is not documented")

@@ -75,7 +75,11 @@ def _get_metadata() -> Metadata:
 def _set_license(metadata: PackageMetadata) -> None:
     license_field = metadata.get("license-expression", metadata.get("license", ""))
     license_name = license_field if isinstance(license_field, str) else " + ".join(license_field)
-    check_classifiers = license_name in ("UNKNOWN", "Dual License", "") or license_name.count("\n")
+    check_classifiers = license_name in (
+        "UNKNOWN",
+        "Dual License",
+        "",
+    ) or license_name.count("\n")
     if check_classifiers:
         license_names = []
         for classifier in metadata["classifier"]:

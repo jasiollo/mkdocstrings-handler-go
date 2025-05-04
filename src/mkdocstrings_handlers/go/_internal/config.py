@@ -73,7 +73,9 @@ try:
             **kwargs,
         )
 except ImportError:
-    from dataclasses import dataclass
+    from dataclasses import dataclass # type: ignore[no-redef] #noqa: I001
+    # # two different dataclass classes, at no point are both used at the same time
+    # ruff formatting breaks ignore comment
 
     def _Field(*args: Any, **kwargs: Any) -> None:  # type: ignore[misc]  # noqa: N802
         pass
@@ -82,16 +84,9 @@ except ImportError:
 if TYPE_CHECKING:
     from collections.abc import MutableMapping
 
-
-# YORE: EOL 3.9: Remove block.
-_dataclass_options = {"frozen": True}
-if sys.version_info >= (3, 10):
-    _dataclass_options["kw_only"] = True
-
-
 # The input config class is useful to generate a JSON schema, see scripts/mkdocs_hooks.py.
 # YORE: EOL 3.9: Replace `**_dataclass_options` with `frozen=True, kw_only=True` within line.
-@dataclass(**_dataclass_options)
+@dataclass(frozen=True, kw_only=True)
 class GoInputOptions:
     """Accepted input options."""
 
@@ -154,8 +149,7 @@ class GoInputOptions:
         return cls(**cls.coerce(**data))
 
 
-# YORE: EOL 3.9: Replace `**_dataclass_options` with `frozen=True, kw_only=True` within line.
-@dataclass(**_dataclass_options)
+@dataclass(frozen=True, kw_only=True)
 class GoOptions(GoInputOptions):  # type: ignore[override,unused-ignore]
     """Final options passed as template context."""
 
@@ -169,8 +163,7 @@ class GoOptions(GoInputOptions):  # type: ignore[override,unused-ignore]
 
 
 # The input config class is useful to generate a JSON schema, see scripts/mkdocs_hooks.py.
-# YORE: EOL 3.9: Replace `**_dataclass_options` with `frozen=True, kw_only=True` within line.
-@dataclass(**_dataclass_options)
+@dataclass(frozen=True, kw_only=True)
 class GoInputConfig:
     """Go handler configuration."""
 
@@ -210,8 +203,7 @@ class GoInputConfig:
         return cls(**cls.coerce(**data))
 
 
-# YORE: EOL 3.9: Replace `**_dataclass_options` with `frozen=True, kw_only=True` within line.
-@dataclass(**_dataclass_options)
+@dataclass(frozen=True, kw_only=True)
 class GoConfig(GoInputConfig):  # type: ignore[override,unused-ignore]
     """Go handler configuration."""
 

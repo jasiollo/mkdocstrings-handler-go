@@ -16,7 +16,6 @@ if TYPE_CHECKING:
     import pytest
     from mkdocstrings import MkdocstringsPlugin
 
-    from mkdocstrings_handlers.python import PythonHandler
     from mkdocstrings_handlers.go import GoHandler
 
 
@@ -81,7 +80,10 @@ def ext_markdown(mkdocs_conf: MkDocsConfig) -> Markdown:
     Returns:
         A Markdown instance.
     """
-    return Markdown(extensions=mkdocs_conf["markdown_extensions"], extension_configs=mkdocs_conf["mdx_configs"])
+    return Markdown(
+        extensions=mkdocs_conf["markdown_extensions"],
+        extension_configs=mkdocs_conf["mdx_configs"],
+    )
 
 
 def handler(plugin: MkdocstringsPlugin, ext_markdown: Markdown) -> GoHandler:

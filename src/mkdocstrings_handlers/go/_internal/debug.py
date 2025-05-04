@@ -79,7 +79,10 @@ def _get_debug_info() -> _Environment:
     """
     py_name, py_version = _interpreter_name_version()
     packages = ["mkdocstrings-go"]
-    variables = ["PYTHONPATH", *[var for var in os.environ if var.startswith("MKDOCSTRINGS_GO")]]
+    variables = [
+        "PYTHONPATH",
+        *[var for var in os.environ if var.startswith("MKDOCSTRINGS_GO")],
+    ]
     return _Environment(
         interpreter_name=py_name,
         interpreter_version=py_version,
