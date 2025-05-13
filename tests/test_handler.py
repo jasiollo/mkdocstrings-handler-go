@@ -22,7 +22,9 @@ def test_identifier_does_not_exist(handler: handler.GoHandler) -> None:
         handler.collect("noway/iamnothere", config.GoOptions())
 
 
-def test_collect_with_function_dock(tmp_path: pathlib.Path, handler: handler.GoHandler) -> None:
+def test_collect_with_function_dock(
+    tmp_path: pathlib.Path, handler: handler.GoHandler
+) -> None:
     file_str = """
 package main
 
@@ -41,7 +43,7 @@ func Foo() {
 
     handler.collect(str(tmp_path / "bar.go"), config.GoOptions())
 
-    assert handler._collected[str(tmp_path/ "bar.go")] == {
+    assert handler._collected[str(tmp_path / "bar.go")] == {
         "type": "package",
         "doc": "",
         "name": "main",
@@ -71,7 +73,9 @@ func Foo() {
     }
 
 
-def test_collect_with_package_dock(tmp_path: pathlib.Path, handler: handler.GoHandler) -> None:
+def test_collect_with_package_dock(
+    tmp_path: pathlib.Path, handler: handler.GoHandler
+) -> None:
     file_str = """
 //package does stuff
 package main
@@ -136,3 +140,26 @@ def test_collect_empty_file(tmp_path: pathlib.Path, handler: handler.GoHandler) 
         "vars": [],
         "funcs": [],
     }
+
+
+def test_blah(handler: handler.GoHandler) -> None:
+
+    from src.mkdocstrings_handlers.go._internal.config import GoOptions
+
+    assert handler.render(
+        {
+            "data": {
+                "title": "Introduction to Go",
+                "content": "Go is an open-source programming language that makes it easy to build simple, reliable, and efficient software.",
+                "author": "Jane Doe",
+                "date": "2023-10-01",
+                "signature": "xd",
+            },
+            "root": True,
+            "heading_level": 1,
+            "config": {"theme": "light", "show_author": True, "show_date": True},
+            "path": "/some/path",
+            "name": "\a",
+        },
+        GoOptions(),
+    )
