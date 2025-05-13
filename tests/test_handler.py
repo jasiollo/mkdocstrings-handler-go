@@ -136,3 +136,47 @@ def test_collect_empty_file(tmp_path: pathlib.Path, handler: handler.GoHandler) 
         "vars": [],
         "funcs": [],
     }
+
+
+
+
+def test_collect_struct(tmp_path: pathlib.Path, handler: handler.GoHandler) -> None:
+    file_str = """
+// Person defines a simple struct with a name and age.
+package main
+
+// Person defines a simple struct with a name and age.
+type Person struct {
+    Name string
+    Age  int
+}
+"""
+    f = tmp_path / "struct.go"
+    f.write_text(file_str, encoding="utf-8")
+
+    # Write go.mod so godocjson can resolve the package
+    handler.collect(str(tmp_path / "struct.go"), config.GoOptions())
+    import pprint
+    pprint.pprint(handler._collected[str(tmp_path / "struct.go")])
+    assert handler._collected[str(tmp_path / "struct.go")] == {'bugs': None,
+ 'consts': [],
+ 'doc': 'Person defines a simple struct with a name and age.\n',
+ 'filenames': [str(tmp_path / "struct.go")],
+ 'funcs': [],
+ 'importPath': str(tmp_path),
+ 'imports': [],
+ 'name': 'main',
+ 'notes': {},
+ 'type': 'package',
+ 'types': [{'consts': [],
+            'doc': 'Person defines a simple struct with a name and age.\n',
+            'filename': '',
+            'funcs': [],
+            'line': 0,
+            'methods': [],
+            'name': 'Person',
+            'packageImportPath': str(tmp_path),
+            'packageName': 'main',
+            'type': 'type',
+            'vars': []}],
+ 'vars': []}
