@@ -277,3 +277,12 @@ def test_render(tmp_path: pathlib.Path, handler: handler.GoHandler) -> None:
     assert "Package: `main`" in rendered
     assert "Struct: `Person`" in rendered
     assert "Person defines a simple struct with a name and age." in rendered
+
+
+    output_path = pathlib.Path("rendered_output.html")
+
+    output_path.write_text(rendered, encoding="utf-8")
+
+    print(f"\n Rendered HTML saved to: {output_path.resolve()}\n")
+
+
