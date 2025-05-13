@@ -146,20 +146,19 @@ def test_blah(handler: handler.GoHandler) -> None:
 
     from src.mkdocstrings_handlers.go._internal.config import GoOptions
 
-    assert handler.render(
+    res = handler.render(
         {
-            "data": {
-                "title": "Introduction to Go",
-                "content": "Go is an open-source programming language that makes it easy to build simple, reliable, and efficient software.",
-                "author": "Jane Doe",
-                "date": "2023-10-01",
-                "signature": "xd",
-            },
-            "root": True,
-            "heading_level": 1,
-            "config": {"theme": "light", "show_author": True, "show_date": True},
+            "title": "Introduction to Go",
+            "content": "Go is an open-source programming language that makes it easy to build simple, reliable, and efficient software.",
+            "author": "Jane Doe",
+            "date": "2023-10-01",
+            "signature": "xd",
             "path": "/some/path",
             "name": "\a",
         },
-        GoOptions(),
+        GoOptions(heading_level = 1),
     )
+    # if ya wanna print uncomment that
+    # print(res)
+    # assert False
+    assert res is not None
