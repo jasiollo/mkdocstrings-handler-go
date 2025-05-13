@@ -1,0 +1,61 @@
+{#- Template for Go functions
+
+Context:
+  function: The data to render.
+  root (bool): Whether this is the root object, injected with `:::` in a Markdown page.
+  heading_level (int): The HTML heading level to use.
+  config (dict): The configuration options.
+-#}
+
+{% block logs scoped %}
+  {#- Logging block.
+
+  This block can be used to log debug messages, deprecation messages, warnings, etc.
+  -#}
+  {{ log.debug("Rendering " + data.path) }}
+{% endblock logs %}
+
+<div class="doc doc-object doc-data">
+  {% with obj = function, html_id = function.path %}
+
+    {% filter heading(
+        heading_level,
+        role="data",
+        id=html_id,
+        class="doc doc-heading",
+        toc_label=('<code class="doc-symbol doc-symbol-toc doc-symbol-data"></code>&nbsp;'|safe if config.show_symbol_type_toc else '') + data.name,
+      ) %}
+
+    {#
+    what i need?
+    - name
+    - package name
+    - importpath?
+    - signature - separate jinja
+        - parameters [{"type":type, "name":name}]
+        - results [{"type":type, "name":name}]
+    - dockstring
+    - position?
+    - filename?
+    - recv ?
+    - orig ?
+
+     #}
+
+    {# {% block heading scoped %}
+    {# heading = function signature #}
+    {#- Heading block.
+
+    This block renders the heading for the function.
+    -#}
+        {% filter heading(
+            heading_level,
+            role = "function",
+            id = html_id
+            class = "doc doc-heading",
+            toc_label=(('<code class>'))
+        )%}
+    {% endblock heading %} #}
+
+  {% endwith %}
+</div>
