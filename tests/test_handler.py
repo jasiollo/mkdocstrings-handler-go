@@ -32,8 +32,8 @@ package main
 //	there go the arguments
 //
 // something something description
-func Foo() {
-	return
+func Foo(b int) int{
+	return b
 }
 """
     f = tmp_path / "bar.go"
@@ -62,8 +62,8 @@ func Foo() {
                 "type": "func",
                 "filename": str(tmp_path / "bar.go"),
                 "line": 10,
-                "parameters": [],
-                "results": [],
+                "parameters": [{'type': 'int', 'name': 'b'}],
+                "results": [{'type': 'int', 'name':''}],
                 "recv": "",
                 "orig": "",
             },
