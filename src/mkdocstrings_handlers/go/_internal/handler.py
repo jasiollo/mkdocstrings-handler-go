@@ -7,7 +7,7 @@ import subprocess
 from os.path import expanduser
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, ClassVar
-
+import dataclasses
 from mkdocs.exceptions import PluginError
 from mkdocstrings import BaseHandler, CollectionError, CollectorItem, get_logger
 
@@ -21,6 +21,14 @@ if TYPE_CHECKING:
 
 
 _logger = get_logger(__name__)
+
+from typing import Mapping
+
+@dataclasses.dataclass
+class CollectorItem:
+    identifier: str
+    data: Any
+    options: Mapping[str, Any]  # or your `GoOptions` type
 
 
 class GoHandler(BaseHandler):
@@ -100,8 +108,11 @@ class GoHandler(BaseHandler):
                 text=True,
             )
             data = json.loads(result.stdout)
+            # self._collected[identifier] = data
             self._collected[identifier] = data
-            return data  # noqa: TRY300 "Consider moving this statement to an `else` block" - what is bro even about?
+            #return data
+            return CollectorItem(identifier=identifier, data=data, options=options)
+            # return data  # noqa: TRY300 "Consider moving this statement to an `else` block" - what is bro even about?
         except subprocess.CalledProcessError as e:
             raise RuntimeError(f"godocjson failed:\n{e.stderr.strip()}") from e
 
@@ -131,7 +142,7 @@ class GoHandler(BaseHandler):
         # It contains both the global and local options, combined together.
 
         # You might want to get the template based on the data type.
-        template = self.env.get_template("data.html.jinja")
+        template = self.env.get_template("struct.html.jinja")
         # All the following variables will be available in the Jinja templates.
         return template.render(
             config=options,
