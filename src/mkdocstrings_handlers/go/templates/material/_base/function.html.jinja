@@ -81,18 +81,36 @@ Context:
       {% endfilter %}
 
       {% block signature scoped %}
-      {#- Signature block.
+        {#- Signature block.
 
-      This block renders the signature for the function,
-      as well as its overloaded signatures if any.
-      -#}
-      {# skipping overloads for now #}
-      {# separate signature by default #}
-      {% filter format_signature(function, config.line_length) %}
-        {{ function.name}}
-      {% endfilter %}
+        This block renders the signature for the function,
+        as well as its overloaded signatures if any.
+        -#}
+        {# skipping overloads for now #}
+        {# separate signature by default #}
+        {% filter format_signature(function, config.line_length) %}
+          {{ function.name}}
+        {% endfilter %}
 
       {% endblock %}
+
+      <div class="doc doc-contents {% if root %}first{% endif %}">
+      {% block contents scoped %}
+        {#- Contents block.
+
+        This block renders the contents of the function.
+        It contains other blocks that users can override.
+        Overriding the contents block allows to rearrange the order of the blocks.
+        -#}
+        {% block dockstring scoped %}
+
+          {{ function.doc }}
+          {# TODO: make docstring template - based on actual docstring standard #}
+
+        {% endblock %}
+      {% endblock %}
+      </div>
+
     {%endif%}
 
   {% endwith %}

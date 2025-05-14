@@ -1,33 +1,29 @@
-import pathlib
 
-import pytest
 import re
 
 from mkdocstrings_handlers.go._internal import config, handler
 
+
 def test_(handler: handler.GoHandler) -> None:
 
-    from src.mkdocstrings_handlers.go._internal.config import GoOptions
     res = handler.render(
             {
-                "doc": " foo bar function\nthis does not newline in dockcomment\n\n\tthere go the arguments\n\nsomething something description\n",
+                "doc": " foo bar function\nthis does not newline in dockcomment\n\nthere go the arguments\n\nsomething something description\n",
                 "name": "Foo",
                 "packageName": "main",
                 "packageImportPath": "./",
                 "type": "func",
                 "filename": "./bar.go",
                 "line": 10,
-                "parameters": [{'type': 'int', 'name': 'b'}, {'type': 'int', "name": "c"}],
-                "results": [{'type': 'int', 'name':''}],
+                "parameters": [{"type": "int", "name": "b"}, {"type": "int", "name": "c"}],
+                "results": [{"type": "int", "name":""}],
                 "recv": "",
                 "orig": "",
             },
         config.GoOptions(show_symbol_type_heading = True),
-        template_name="function.html.jinja"
+        template_name="function.html.jinja",
     )
-    # if ya wanna print uncomment that
-    print(res)
-    html = '''
+    html = """
     <div class="doc doc-object doc-function">
         <h2 id="./bar.go" class="doc doc-heading">
             <code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>
@@ -54,7 +50,16 @@ def test_(handler: handler.GoHandler) -> None:
                 </code>
             </pre>
         </div>
-    </div>'''
-    expected =  re.sub(r'\n\s*', '', html)
-    res = re.sub( r'>\s+<', r'><',re.sub(r'\n\s*', '', res))
+        <div class="doc doc-contents ">
+            foo bar function
+            this does not newline in dockcomment
+            there go the arguments
+
+            something something description
+
+
+        </div>
+    </div>"""
+    expected =  re.sub(r"\n\s*", "", html)
+    res = re.sub( r">\s+<", r"><",re.sub(r"\n\s*", "", res))
     assert  res == expected

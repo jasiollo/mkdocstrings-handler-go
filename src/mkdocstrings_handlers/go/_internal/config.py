@@ -114,14 +114,6 @@ class GoInputOptions:
         ),
     ] = 2
 
-    show_symbol_type_heading: Annotated[
-        bool,
-        _Field(
-            group="headings",
-            description="Show the symbol type in headings (e.g. mod, class, meth, func and attr).",
-        ),
-    ] = False
-
     show_symbol_type_toc: Annotated[
         bool,
         _Field(

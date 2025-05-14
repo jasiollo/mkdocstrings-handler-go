@@ -1,17 +1,13 @@
-from typing import TYPE_CHECKING
-from markupsafe import Markup
-from jinja2 import TemplateNotFound
-from mkdocstrings import get_logger
-
-
+from jinja2 import pass_context
 from jinja2.runtime import Context
-from jinja2 import Environment, pass_context
+from markupsafe import Markup
+from mkdocstrings import get_logger
 
 _logger = get_logger(__name__)
 
 
 def _format_signature(name: Markup, signature: str, line_length:int) -> str:
-    name = str(name).strip()
+    name = str(name).strip()    # type: ignore[assignment]
     signature = signature.strip()
     if len(name+signature) < line_length:
         return name + signature
@@ -49,7 +45,7 @@ def do_format_signature(
     signature = template.render(new_context, function=function, signature=True)
     signature = _format_signature(callable_path, signature, line_length)
 
-    signature = str(
+    return str(
         env.filters["highlight"](
             Markup.escape(signature),
             language="go",
@@ -58,4 +54,3 @@ def do_format_signature(
             linenums=False,
         ),
     )
-    return signature

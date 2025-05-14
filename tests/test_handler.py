@@ -62,8 +62,8 @@ func Foo(b int) int{
                 "type": "func",
                 "filename": str(tmp_path / "bar.go"),
                 "line": 10,
-                "parameters": [{'type': 'int', 'name': 'b'}],
-                "results": [{'type': 'int', 'name':''}],
+                "parameters": [{"type": "int", "name": "b"}],
+                "results": [{"type": "int", "name":""}],
                 "recv": "",
                 "orig": "",
             },
@@ -89,7 +89,6 @@ func Foo(b int) (int, int){
     f.write_text(file_str, encoding="utf-8")
 
     handler.collect(str(tmp_path / "bar.go"), config.GoOptions())
-    print(handler._collected)
     assert handler._collected[str(tmp_path/ "bar.go")] == {
         "type": "package",
         "doc": "",
@@ -111,8 +110,8 @@ func Foo(b int) (int, int){
                 "type": "func",
                 "filename": str(tmp_path / "bar.go"),
                 "line": 10,
-                "parameters": [{'type': 'int', 'name': 'b'}],
-                "results": [{'type': 'int', 'name':''}, {'type': 'int', 'name':''}],
+                "parameters": [{"type": "int", "name": "b"}],
+                "results": [{"type": "int", "name":""}, {"type": "int", "name":""}],
                 "recv": "",
                 "orig": "",
             },
@@ -138,7 +137,6 @@ func NewHouse(opts struct{Material string; HasFireplace bool; Composable bool; F
     f.write_text(file_str, encoding="utf-8")
 
     handler.collect(str(tmp_path / "bar.go"), config.GoOptions())
-    print(handler._collected)
     assert handler._collected[str(tmp_path/ "bar.go")] == {
         "type": "package",
         "doc": "",
@@ -160,7 +158,7 @@ func NewHouse(opts struct{Material string; HasFireplace bool; Composable bool; F
                 "type": "func",
                 "filename": str(tmp_path / "bar.go"),
                 "line": 10,
-                "parameters": [{'type': 'struct{string,bool,bool,int}', 'name': 'opts'}],
+                "parameters": [{"type": "struct{string,bool,bool,int}", "name": "opts"}],
                 "results": [],
                 "recv": "",
                 "orig": "",
