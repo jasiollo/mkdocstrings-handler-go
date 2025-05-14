@@ -1,4 +1,4 @@
-from jinja2 import Environment, pass_context, pass_environment
+from jinja2 import Environment, Template, pass_context, pass_environment
 from jinja2.runtime import Context
 from markupsafe import Markup
 from mkdocstrings import get_logger
@@ -60,7 +60,7 @@ TEMPLATE_MAP = {
 }
 
 @pass_environment
-def do_get_template(env: Environment, obj: dict) -> str:
+def do_get_template(env: Environment, obj: dict) -> Template:
     """Get the template name used to render an object.
 
     Parameters:

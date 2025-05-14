@@ -19,6 +19,6 @@ __all__ = [
     "GoInputOptions",
     "GoOptions",
     "do_format_signature",
+    "do_get_template",
     "get_handler",
-    "do_get_template"
 ]

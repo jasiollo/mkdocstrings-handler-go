@@ -9,6 +9,7 @@ actions = \
 	check-api \
 	check-docs \
 	check-quality \
+	fix-quality \
 	check-types \
 	clean \
 	coverage \
