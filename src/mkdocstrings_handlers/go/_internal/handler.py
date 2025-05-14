@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import subprocess
+from collections.abc import Mapping
 from os.path import expanduser
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, ClassVar
@@ -22,6 +23,8 @@ if TYPE_CHECKING:
 
 
 _logger = get_logger(__name__)
+
+
 
 
 class GoHandler(BaseHandler):
@@ -101,8 +104,12 @@ class GoHandler(BaseHandler):
                 text=True,
             )
             data = json.loads(result.stdout)
+            # self._collected[identifier] = data
             self._collected[identifier] = data
-            return data  # noqa: TRY300 "Consider moving this statement to an `else` block" - what is bro even about?
+            if data:
+                return data
+            #return CollectorItem(identifier=identifier, data=data, options=options)
+            # return data
         except subprocess.CalledProcessError as e:
             raise RuntimeError(f"godocjson failed:\n{e.stderr.strip()}") from e
 
@@ -125,19 +132,22 @@ class GoHandler(BaseHandler):
         # typically when mkdocstrings will try to get aliases for an identifier through your `get_aliases` method.
         raise CollectionError("Implement me!")
 
-    def render(self, data: CollectorItem, options: GoOptions) -> str:
+    def render(self, data: CollectorItem, options: GoOptions,  template_name:str = "data.html.jinja") -> str:
         """Render a template using provided data and configuration options."""
         # The `data` argument is the data to render, that was collected above in `collect()`.
         # The `options` argument is the configuration options for loading/rendering the data.
         # It contains both the global and local options, combined together.
 
         # You might want to get the template based on the data type.
+
+        template = self.env.get_template(template_name)
+
         template = rendering.do_get_template(self.env, data)
 
         # All the following variables will be available in the Jinja templates.
         return template.render(
             config=options,
-            function=data,  # You might want to rename `data` into something more specific.
+            data=data,  # You might want to rename `data` into something more specific.
             heading_level=options.heading_level,
             root=False,
         )
@@ -160,7 +170,11 @@ class GoHandler(BaseHandler):
         self.env.trim_blocks = True
         self.env.lstrip_blocks = True
         self.env.keep_trailing_newline = False
+
+        self.env.filters["format_types"] = rendering.do_format_types
+
         self.env.filters["format_signature"] = rendering.do_format_signature
+
 
     # You can also implement the `get_inventory_urls` and `load_inventory` methods
     # if you want to support loading object inventories.
