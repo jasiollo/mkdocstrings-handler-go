@@ -144,13 +144,17 @@ class GoHandler(BaseHandler):
         # It contains both the global and local options, combined together.
 
         # You might want to get the template based on the data type.
+
         template = self.env.get_template(template_name)
+
+        template = rendering.do_get_template(self.env, data)
+
         # All the following variables will be available in the Jinja templates.
         return template.render(
             config=options,
-            data=data,  # You might want to rename `data` into something more specific.
+            function=data,  # You might want to rename `data` into something more specific.
             heading_level=options.heading_level,
-            root=True,
+            root=False,
         )
 
     def get_aliases(self, identifier: str) -> tuple[str, ...]:
@@ -171,7 +175,10 @@ class GoHandler(BaseHandler):
         self.env.trim_blocks = True
         self.env.lstrip_blocks = True
         self.env.keep_trailing_newline = False
+
         self.env.filters["format_types"] = rendering.do_format_types
+
+        self.env.filters["format_signature"] = rendering.do_format_signature
 
 
     # You can also implement the `get_inventory_urls` and `load_inventory` methods

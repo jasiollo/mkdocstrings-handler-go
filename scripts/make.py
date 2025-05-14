@@ -196,7 +196,7 @@ def main() -> int:
         elif cmd == "check":
             multirun("duty", "check-quality", "check-types", "check-docs")
             run("default", "duty", "check-api")
-        elif cmd in {"check-quality", "check-docs", "check-types", "test"}:
+        elif cmd in {"check-quality", "check-docs", "check-types", "test", "fix-quality"}:
             multirun("duty", cmd, *opts)
         else:
             run("default", "duty", cmd, *opts)

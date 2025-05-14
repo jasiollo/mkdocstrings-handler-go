@@ -1,0 +1,44 @@
+{#- Template for signatures.
+
+This template renders the signature of a function or method.
+It iterates over the parameters of the function to rebuild the signature.
+The signature is the list of parameters of a function or method, including their names, default values, and annotations.
+
+Context:
+  function (dict): The function or method to render.
+  config (dict): The configuration options.
+-#}
+
+{%- if config.show_signature -%}
+  {%- block logs scoped -%}
+    {#- Logging block.
+
+    This block can be used to log debug messages, deprecation messages, warnings, etc.
+    -#}
+    {{ log.debug("Rendering signature") }}
+  {%- endblock logs -%}
+
+
+    {#
+    ({name type}) [type|(type {, type})]
+    expand struct params?
+
+    #}
+    (
+    {%- for parameter in function.parameters -%}
+        {# render parameter name #}
+        {{parameter.name}} {{parameter.type}}
+        {%- if not loop.last-%}, {%- endif -%}
+        {# TODO: add cross references - separate template for type ref#}
+        {# <autoref identifier="{{ function.filename }}({{function.name}} {{parameter.name}})" optional>{{parameter.name}}</autoref> {{parameter.type}}, #}
+        {# render parameter type #}
+    {%- endfor -%}
+    )
+
+    {#- Render return type. -#}
+    {% for result in function.results %}
+        {{ result.type }}
+        {%- if not loop.last-%}, {%- endif -%}
+    {% endfor %}
+
+{%- endif -%}
