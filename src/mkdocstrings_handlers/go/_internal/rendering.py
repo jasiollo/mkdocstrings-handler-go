@@ -1,11 +1,7 @@
-from typing import TYPE_CHECKING
-from markupsafe import Markup
-from jinja2 import TemplateNotFound
-from mkdocstrings import get_logger
-
-
+from jinja2 import TemplateNotFound, pass_context
 from jinja2.runtime import Context
-from jinja2 import Environment, pass_context
+from markupsafe import Markup
+from mkdocstrings import get_logger
 
 _logger = get_logger(__name__)
 
@@ -63,15 +59,22 @@ _logger = get_logger(__name__)
 
 
 
-def _format_types():
-    pass
-    # mi to w sumie nie potrzebne
+def _format_types(name: Markup, signature: str, line_length: int) -> str:
+    name = str(name).strip()
+    signature = signature.strip()
+    if len(name + signature) < line_length:
+        return signature  # name is already inside the signature block
+
+    # temporary solution: split long structs
+    return "\n" + signature
+
 
 @pass_context
-def do_format_types(ctx, block_content: str) -> str:
-    data = ctx.get("data")
+def do_format_types(ctx: Context, block_content: str,data, line_length) -> str:
+    config = ctx.get("config", {})
+
     if not data:
-        _logger.warning("No 'data' found in context for do_format_types.")
+        _logger.warning("No 'data' found in context for struct signature.")
         return ""
 
     try:
@@ -80,4 +83,15 @@ def do_format_types(ctx, block_content: str) -> str:
         _logger.warning("Template 'types.html.jinja' not found.")
         return ""
 
-    return Markup(template.render(data=data))
+    signature = template.render(data=data)
+    formatted = _format_types(data["name"], signature, line_length)
+
+    return Markup(
+        ctx.environment.filters["highlight"](
+            Markup.escape(formatted),
+            language="go",
+            inline=False,
+            classes=["doc-signature"],
+            linenums=False,
+        ),
+    )

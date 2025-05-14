@@ -1,6 +1,7 @@
 from pathlib import Path
+
+from mkdocstrings_handlers.go._internal.config import GoConfig, GoOptions
 from mkdocstrings_handlers.go._internal.handler import GoHandler
-from mkdocstrings_handlers.go._internal.config import GoOptions, GoConfig
 
 dummy_config = GoConfig(options={})
 dummy_base_dir = Path(".")

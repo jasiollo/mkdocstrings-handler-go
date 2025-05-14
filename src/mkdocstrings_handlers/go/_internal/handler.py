@@ -4,17 +4,17 @@ from __future__ import annotations
 
 import json
 import subprocess
+from collections.abc import Mapping
 from os.path import expanduser
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, ClassVar
-import dataclasses
+
 from mkdocs.exceptions import PluginError
 from mkdocstrings import BaseHandler, CollectionError, CollectorItem, get_logger
 
 from mkdocstrings_handlers.go._internal import rendering
-
 from mkdocstrings_handlers.go._internal.config import GoConfig, GoOptions
-from typing import Mapping
+
 if TYPE_CHECKING:
     from collections.abc import Mapping, MutableMapping
 
@@ -26,11 +26,6 @@ _logger = get_logger(__name__)
 
 
 
-@dataclasses.dataclass
-class CollectorItem:
-    identifier: str
-    data: Any
-    options: Mapping[str, Any]  
 
 
 class GoHandler(BaseHandler):
@@ -112,9 +107,8 @@ class GoHandler(BaseHandler):
             data = json.loads(result.stdout)
             # self._collected[identifier] = data
             self._collected[identifier] = data
-            #return data
-            return CollectorItem(identifier=identifier, data=data, options=options)
-            # return data  # noqa: TRY300 "Consider moving this statement to an `else` block" - what is bro even about?
+            return data
+            # return data
         except subprocess.CalledProcessError as e:
             raise RuntimeError(f"godocjson failed:\n{e.stderr.strip()}") from e
 

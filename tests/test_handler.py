@@ -1,9 +1,10 @@
 import pathlib
+import pprint
 
 import pytest
 
 from mkdocstrings_handlers.go._internal import config, handler
-import pprint
+
 # parsing non local go projects is currently out of scope
 # def test_collect_module(handler) -> None:
 # """Assert existing module can be collected."""
@@ -157,28 +158,28 @@ type Person struct {
     # Write go.mod so godocjson can resolve the package
     handler.collect(str(tmp_path / "struct.go"), config.GoOptions())
     pprint.pprint(handler._collected[str(tmp_path / "struct.go")])
-    assert handler._collected[str(tmp_path / "struct.go")] == {'bugs': None,
- 'consts': [],
- 'doc': 'Person defines a simple struct with a name and age.\n',
- 'filenames': [str(tmp_path / "struct.go")],
- 'funcs': [],
- 'importPath': str(tmp_path),
- 'imports': [],
- 'name': 'main',
- 'notes': {},
- 'type': 'package',
- 'types': [{'consts': [],
-            'doc': 'Person defines a simple struct with a name and age.\n',
-            'filename': '',
-            'funcs': [],
-            'line': 0,
-            'methods': [],
-            'name': 'Person',
-            'packageImportPath': str(tmp_path),
-            'packageName': 'main',
-            'type': 'type',
-            'vars': []}],
- 'vars': []}
+    assert handler._collected[str(tmp_path / "struct.go")] == {"bugs": None,
+ "consts": [],
+ "doc": "Person defines a simple struct with a name and age.\n",
+ "filenames": [str(tmp_path / "struct.go")],
+ "funcs": [],
+ "importPath": str(tmp_path),
+ "imports": [],
+ "name": "main",
+ "notes": {},
+ "type": "package",
+ "types": [{"consts": [],
+            "doc": "Person defines a simple struct with a name and age.\n",
+            "filename": "",
+            "funcs": [],
+            "line": 0,
+            "methods": [],
+            "name": "Person",
+            "packageImportPath": str(tmp_path),
+            "packageName": "main",
+            "type": "type",
+            "vars": []}],
+ "vars": []}
 
 #doc, name , package name, var struct, types
 
@@ -251,12 +252,12 @@ type Person struct {
 #     options = config.GoOptions()
 #     collector_item = handler.collect(str(f), options)
 
-    
+
 #     assert str(f) in handler._collected
 #     collected = handler._collected[str(f)]
 
 
-    
+
 #     pprint.pprint(collected)
 
 
@@ -268,7 +269,7 @@ type Person struct {
 
 #     print("\n=== Rendered Output ===\n", rendered)
 
-    
+
 #     assert "Package: `main`" in rendered
 #     assert "Struct: `Person`" in rendered
 #     assert "Person defines a simple struct with a name and age." in rendered
@@ -326,7 +327,7 @@ type Person struct {
     print("\n=== Rendered Output ===\n", rendered_html)
 
     assert "Person defines a simple struct with a name and age." in rendered_html
-    assert "<span class=\"doc doc-object-name doc-object-class-name\">Person</span>" in rendered_html
+    assert '<span class="doc doc-object-name doc-object-class-name">Person</span>' in rendered_html
     assert "type Person struct" in rendered_html
     assert "Name string" in rendered_html
     assert "Age int" in rendered_html
