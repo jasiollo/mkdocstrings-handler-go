@@ -28,7 +28,7 @@ from typing import Mapping
 class CollectorItem:
     identifier: str
     data: Any
-    options: Mapping[str, Any]  # or your `GoOptions` type
+    options: Mapping[str, Any]  
 
 
 class GoHandler(BaseHandler):

@@ -249,10 +249,6 @@ def test_render(tmp_path: pathlib.Path, handler: handler.GoHandler) -> None:
     f = tmp_path / "struct.go"
     f.write_text(file_str, encoding="utf-8")
 
-    # Write go.mod so godocjson can resolve the package
-    modfile = tmp_path / "go.mod"
-    modfile.write_text("module example.com/test\n", encoding="utf-8")
-
     options = config.GoOptions()
     collector_item = handler.collect(str(f), options)
 
@@ -279,10 +275,10 @@ def test_render(tmp_path: pathlib.Path, handler: handler.GoHandler) -> None:
     assert "Person defines a simple struct with a name and age." in rendered
 
 
-    output_path = pathlib.Path("rendered_output.html")
+    project_root = pathlib.Path(__file__).resolve().parents[1]
+    output_path = project_root / "src/mkdocstrings_handlers/go/templates/filled_templates/rendered_output.html"
 
     output_path.write_text(rendered, encoding="utf-8")
-
-    print(f"\n Rendered HTML saved to: {output_path.resolve()}\n")
+    print(f"\n Rendered saved to: {output_path.resolve()}\n")
 
 
