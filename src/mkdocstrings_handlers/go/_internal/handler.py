@@ -2,15 +2,17 @@
 
 from __future__ import annotations
 
+import glob
 import json
+import os
 import subprocess
-from collections.abc import Mapping
+import sys
 from os.path import expanduser
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, ClassVar
 
 from mkdocs.exceptions import PluginError
-from mkdocstrings import BaseHandler, CollectionError, CollectorItem, get_logger
+from mkdocstrings import BaseHandler, CollectorItem, get_logger
 
 from mkdocstrings_handlers.go._internal import rendering
 from mkdocstrings_handlers.go._internal.config import GoConfig, GoOptions
@@ -20,6 +22,22 @@ if TYPE_CHECKING:
 
     from mkdocs.config.defaults import MkDocsConfig
     from mkdocstrings import HandlerOptions
+
+
+# YORE: EOL 3.10: Replace block with line 2.
+if sys.version_info >= (3, 11):
+    from contextlib import chdir
+else:
+    from contextlib import contextmanager
+
+    @contextmanager
+    def chdir(path: str) -> Iterator[None]:
+        old_wd = os.getcwd()
+        os.chdir(path)
+        try:
+            yield
+        finally:
+            os.chdir(old_wd)
 
 
 _logger = get_logger(__name__)
@@ -49,7 +67,7 @@ class GoHandler(BaseHandler):
         config: GoConfig,
         base_dir: Path,
         *,
-        godocjson_path: str ="~/go/bin/godocjson",
+        godocjson_path: str = "~/go/bin/godocjson",
         **kwargs: Any,
     ) -> None:
         """Initialize the handler.
@@ -70,6 +88,31 @@ class GoHandler(BaseHandler):
         self.godocjson_path = godocjson_path
         """The path to go parser"""
 
+        paths = config.paths or []
+
+        # Expand paths with glob patterns.
+        with chdir(str(base_dir)):
+            resolved_globs = [glob.glob(path) for path in paths]
+        paths = [path for glob_list in resolved_globs for path in glob_list]
+
+        # By default, add the base directory to the search paths.
+        if not paths:
+            paths.append(str(base_dir))
+
+        # Initialize search paths from `sys.path`, eliminating empty paths.
+        search_paths = [path for path in sys.path if path]
+
+        for path in reversed(paths):
+            # If it's not absolute, make path relative to the config file path, then make it absolute.
+            if not os.path.isabs(path):
+                path = os.path.abspath(base_dir / path)  # noqa: PLW2901
+            # Remove pre-listed paths.
+            if path in search_paths:
+                search_paths.remove(path)
+            # Give precedence to user-provided paths.
+            search_paths.insert(0, path)
+
+        self._paths = search_paths
         self._collected: dict[str, CollectorItem] = {}
 
     def get_options(self, local_options: Mapping[str, Any]) -> HandlerOptions:
@@ -95,44 +138,55 @@ class GoHandler(BaseHandler):
         """Collect data given an identifier and selection configuration."""
         if not identifier:
             raise AttributeError("Identifier cannot be empty!\n")
-        path = self.base_dir / identifier
+
+        fqn_depth = 2
+        parts = identifier.split(".")
+        pkg_path, *objects = parts
+
+        if len(objects) > fqn_depth or len(objects) < 1:
+            raise ValueError(
+                f"Invalid FQN: '{identifier}'. Go identifiers must be at most 'package.Type.Method'",
+            )
+
+        obj = method = None
+        if len(objects) == fqn_depth:
+            obj, method = objects
+        else:
+            obj = objects[0]
+
+        valid_path = next(
+            (
+                Path(base) / pkg_path
+                for base in self._paths
+                if (Path(base) / pkg_path).is_dir()
+            ),
+            None,
+        )
+
+        if valid_path is None:
+            raise FileNotFoundError(f"No valid package path found for '{pkg_path}'")
+
         try:
-            result = subprocess.run(    # noqa: S603 i fount no way to fix S603 other than to not run anything
-                [expanduser(self.godocjson_path), str(path.parent)],
+            result = subprocess.run(  # noqa: S603 i fount no way to fix S603 other than to not run anything
+                [expanduser(self.godocjson_path), valid_path],
                 check=True,
                 capture_output=True,
                 text=True,
             )
             data = json.loads(result.stdout)
-            # self._collected[identifier] = data
-            self._collected[identifier] = data
-            if data:
-                return data
-            #return CollectorItem(identifier=identifier, data=data, options=options)
-            # return data
+
+            if method:
+                filtered_data = find_dicts_with_value(data, "name", obj)
+                filtered_data = find_dicts_with_value(filtered_data, "name", method)
+            else:
+                filtered_data = find_dicts_with_value(data, "name", obj)
+            result = filtered_data[0]
+            self._collected[identifier] = result
+            return result
         except subprocess.CalledProcessError as e:
             raise RuntimeError(f"godocjson failed:\n{e.stderr.strip()}") from e
 
-        # You could store the collected data for later alias resolution
-        self._collected[identifier] = data
-        return CollectorItem(identifier=identifier, data=data, options=options)
-
-        # In the implementation, you either run a specialized tool in a subprocess
-        # to capture its JSON output, that you load again in Python data structures,
-        # or you parse the source code directly, for example with tree-sitter.
-        #
-        # The `identifier` argument is the fully qualified name of the object to collect.
-        # For example, in Python, it would be 'package.module.function' to collect documentation
-        # for this function. Other languages have different conventions.
-        #
-        # The `options` argument is the configuration options for loading/rendering the data.
-        # It contains both the global and local options, combined together.
-        #
-        # You might want to store collected data in `self._collected`, for easier retrieval later,
-        # typically when mkdocstrings will try to get aliases for an identifier through your `get_aliases` method.
-        raise CollectionError("Implement me!")
-
-    def render(self, data: CollectorItem, options: GoOptions,  template_name:str = "data.html.jinja") -> str:
+    def render(self, data: CollectorItem, options: GoOptions) -> str:
         """Render a template using provided data and configuration options."""
         # The `data` argument is the data to render, that was collected above in `collect()`.
         # The `options` argument is the configuration options for loading/rendering the data.
@@ -201,3 +255,19 @@ def get_handler(
         base_dir=base_dir,
         **kwargs,
     )
+
+
+def find_dicts_with_value(obj: dict, target_key: str, target_value: str) -> list:
+    results = []
+    if isinstance(obj, dict):
+        # Check if the current dict has the key and value
+        if target_key in obj and obj[target_key] == target_value:
+            results.append(obj)
+        # Recursively search in each value
+        for value in obj.values():
+            results.extend(find_dicts_with_value(value, target_key, target_value))
+    elif isinstance(obj, list):
+        # If it's a list, search each item
+        for item in obj:
+            results.extend(find_dicts_with_value(item, target_key, target_value))
+    return results
