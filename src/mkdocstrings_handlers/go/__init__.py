@@ -9,6 +9,7 @@ from mkdocstrings_handlers.go._internal.config import (
 from mkdocstrings_handlers.go._internal.handler import GoHandler, get_handler
 from mkdocstrings_handlers.go._internal.rendering import (
     do_format_signature,
+    do_get_template,
 )
 
 __all__ = [
@@ -19,4 +20,5 @@ __all__ = [
     "GoOptions",
     "do_format_signature",
     "get_handler",
+    "do_get_template"
 ]

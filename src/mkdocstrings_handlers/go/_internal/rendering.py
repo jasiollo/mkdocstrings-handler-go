@@ -1,4 +1,4 @@
-from jinja2 import pass_context
+from jinja2 import Environment, pass_context, pass_environment
 from jinja2.runtime import Context
 from markupsafe import Markup
 from mkdocstrings import get_logger
@@ -54,3 +54,23 @@ def do_format_signature(
             linenums=False,
         ),
     )
+
+TEMPLATE_MAP = {
+    "func": "function.html.jinja",
+}
+
+@pass_environment
+def do_get_template(env: Environment, obj: dict) -> str:
+    """Get the template name used to render an object.
+
+    Parameters:
+        env: The Jinja environment, passed automatically.
+        obj: A dict representing collected object.
+
+    Returns:
+        A template name.
+    """
+    name = TEMPLATE_MAP.get(obj["type"])
+    if name is None:
+        raise AttributeError(f"Object type {obj['type']} does not appear to have a TEMPLATE_MAP entry")
+    return env.get_template(name)

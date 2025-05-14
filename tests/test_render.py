@@ -21,7 +21,6 @@ def test_(handler: handler.GoHandler) -> None:
                 "orig": "",
             },
         config.GoOptions(show_symbol_type_heading = True),
-        template_name="function.html.jinja",
     )
     html = """
     <div class="doc doc-object doc-function">

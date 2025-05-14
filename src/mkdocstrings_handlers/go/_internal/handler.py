@@ -125,14 +125,15 @@ class GoHandler(BaseHandler):
         # typically when mkdocstrings will try to get aliases for an identifier through your `get_aliases` method.
         raise CollectionError("Implement me!")
 
-    def render(self, data: CollectorItem, options: GoOptions, template_name:str = "data.html.jinja") -> str:
+    def render(self, data: CollectorItem, options: GoOptions) -> str:
         """Render a template using provided data and configuration options."""
         # The `data` argument is the data to render, that was collected above in `collect()`.
         # The `options` argument is the configuration options for loading/rendering the data.
         # It contains both the global and local options, combined together.
 
         # You might want to get the template based on the data type.
-        template = self.env.get_template(template_name)
+        template = rendering.do_get_template(self.env, data)
+
         # All the following variables will be available in the Jinja templates.
         return template.render(
             config=options,
