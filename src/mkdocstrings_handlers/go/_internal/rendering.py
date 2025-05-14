@@ -1,9 +1,5 @@
 
-from typing import TYPE_CHECKING
-from markupsafe import Markup
-from jinja2 import TemplateNotFound
-from mkdocstrings import get_logger
-from jinja2 import Environment, Template, pass_context, pass_environment
+from jinja2 import Environment, Template, TemplateNotFound, pass_context, pass_environment
 from jinja2.runtime import Context
 from markupsafe import Markup
 from mkdocstrings import get_logger
@@ -64,13 +60,8 @@ _logger = get_logger(__name__)
 
 
 
-
-def _format_types():
-    pass
-    # mi to w sumie nie potrzebne
-
 @pass_context
-def do_format_types(ctx, block_content: str) -> str:
+def do_format_types(ctx: Context, _ : str) -> str:
     data = ctx.get("data")
     if not data:
         _logger.warning("No 'data' found in context for do_format_types.")
@@ -82,7 +73,7 @@ def do_format_types(ctx, block_content: str) -> str:
         _logger.warning("Template 'types.html.jinja' not found.")
         return ""
 
-    return Markup(template.render(data=data))
+    return template.render(data=data)
 
 
 
@@ -137,6 +128,7 @@ def do_format_signature(
 
 _TEMPLATE_MAP = {
     "func": "function.html.jinja",
+    "type": "struct.html.jinja",
 }
 
 @pass_environment
