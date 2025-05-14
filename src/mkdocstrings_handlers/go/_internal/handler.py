@@ -11,8 +11,10 @@ import dataclasses
 from mkdocs.exceptions import PluginError
 from mkdocstrings import BaseHandler, CollectionError, CollectorItem, get_logger
 
-from mkdocstrings_handlers.go._internal.config import GoConfig, GoOptions
+from mkdocstrings_handlers.go._internal import rendering
 
+from mkdocstrings_handlers.go._internal.config import GoConfig, GoOptions
+from typing import Mapping
 if TYPE_CHECKING:
     from collections.abc import Mapping, MutableMapping
 
@@ -22,7 +24,7 @@ if TYPE_CHECKING:
 
 _logger = get_logger(__name__)
 
-from typing import Mapping
+
 
 @dataclasses.dataclass
 class CollectorItem:
@@ -135,14 +137,14 @@ class GoHandler(BaseHandler):
         # typically when mkdocstrings will try to get aliases for an identifier through your `get_aliases` method.
         raise CollectionError("Implement me!")
 
-    def render(self, data: CollectorItem, options: GoOptions) -> str:
+    def render(self, data: CollectorItem, options: GoOptions,  template_name:str = "data.html.jinja") -> str:
         """Render a template using provided data and configuration options."""
         # The `data` argument is the data to render, that was collected above in `collect()`.
         # The `options` argument is the configuration options for loading/rendering the data.
         # It contains both the global and local options, combined together.
 
         # You might want to get the template based on the data type.
-        template = self.env.get_template("struct.html.jinja")
+        template = self.env.get_template(template_name)
         # All the following variables will be available in the Jinja templates.
         return template.render(
             config=options,
@@ -169,6 +171,8 @@ class GoHandler(BaseHandler):
         self.env.trim_blocks = True
         self.env.lstrip_blocks = True
         self.env.keep_trailing_newline = False
+        self.env.filters["format_types"] = rendering.do_format_types
+
 
     # You can also implement the `get_inventory_urls` and `load_inventory` methods
     # if you want to support loading object inventories.

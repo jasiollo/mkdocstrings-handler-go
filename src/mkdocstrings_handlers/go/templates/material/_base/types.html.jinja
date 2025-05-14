@@ -1,0 +1,9 @@
+{%- if data.fields -%}
+<pre>
+type {{ data.name }} struct {
+{%- for field in data.fields %}
+    {{ field.name }} {{ field.type }}
+{%- endfor %}
+}
+</pre>
+{%- endif -%}
