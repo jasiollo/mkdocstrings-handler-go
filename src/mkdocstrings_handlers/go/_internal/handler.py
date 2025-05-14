@@ -107,8 +107,6 @@ class GoHandler(BaseHandler):
             # self._collected[identifier] = data
             self._collected[identifier] = data
             if data:
-                pass
-            else:
                 return data
             #return CollectorItem(identifier=identifier, data=data, options=options)
             # return data
