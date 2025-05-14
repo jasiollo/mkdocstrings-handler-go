@@ -12,22 +12,13 @@ Context:
 
   This block can be used to log debug messages, deprecation messages, warnings, etc.
   -#}
-  {{ log.debug("Rendering " + data.path) }}
+  {{ log.debug("Rendering " + function.filename) }}
 {% endblock logs %}
 
-<div class="doc doc-object doc-data">
-  {% with obj = function, html_id = function.path %}
-
-    {% filter heading(
-        heading_level,
-        role="data",
-        id=html_id,
-        class="doc doc-heading",
-        toc_label=('<code class="doc-symbol doc-symbol-toc doc-symbol-data"></code>&nbsp;'|safe if config.show_symbol_type_toc else '') + data.name,
-      ) %}
-
+<div class="doc doc-object doc-function">
     {#
-    what i need?
+    what i need?- all needs to be provided in data object
+                  optional as well
     - name
     - package name
     - importpath?
@@ -35,27 +26,74 @@ Context:
         - parameters [{"type":type, "name":name}]
         - results [{"type":type, "name":name}]
     - dockstring
+    - filename
     - position?
-    - filename?
     - recv ?
     - orig ?
 
+    all '?' conditionally as options flags - separate or all in 1 flag?
+      - recv and orig - 1 flag
+      - import - 1 flag
+      - position - 1 flag
+      - filename -
+
      #}
+  {% with obj = function, html_id = function.filename %}
 
-    {# {% block heading scoped %}
-    {# heading = function signature #}
-    {#- Heading block.
+    {% if root %}
+      {% set show_full_path = config.show_root_full_path %}
+      {% set root_members = True %}
+    {% elif root_members %}
+      {% set show_full_path = config.show_root_members_full_path or config.show_object_full_path %}
+      {% set root_members = False %}
+    {% else %}
+      {% set show_full_path = config.show_object_full_path %}
+    {% endif %}
 
-    This block renders the heading for the function.
-    -#}
-        {% filter heading(
-            heading_level,
-            role = "function",
-            id = html_id
-            class = "doc doc-heading",
-            toc_label=(('<code class>'))
-        )%}
-    {% endblock heading %} #}
+    {% set function_name = function.filename if show_full_path else function.name %}
+    {% set symbol_type = "function" %}
+
+    {% if not root %}
+      {% filter heading(
+          heading_level,
+          role="function",
+          id=html_id,
+          class="doc doc-heading",
+          toc_label=('<code class="doc-symbol doc-symbol-toc doc-symbol-' + symbol_type + '"></code>&nbsp;'|safe if config.show_symbol_type_toc else '') + function.name,
+        ) %}
+        {% block heading scoped%}
+        {#- Heading block.
+
+        This block renders the heading for the function.
+        -#}
+        {% if config.show_symbol_type_heading %}
+          <code class="doc-symbol doc-symbol-heading doc-symbol-{{ symbol_type}}"></code>
+        {%endif%}
+
+        {#
+        separate signature by default
+        labels put off for later
+        #}
+        <span class="doc doc-object-name doc-object-function-name">{{ config.heading if config.heading and root else function_name }}</span>
+
+        {% endblock heading %}
+
+      {% endfilter %}
+
+      {% block signature scoped %}
+      {#- Signature block.
+
+      This block renders the signature for the function,
+      as well as its overloaded signatures if any.
+      -#}
+      {# skipping overloads for now #}
+      {# separate signature by default #}
+      {% filter format_signature(function, config.line_length) %}
+        {{ function.name}}
+      {% endfilter %}
+
+      {% endblock %}
+    {%endif%}
 
   {% endwith %}
 </div>

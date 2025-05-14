@@ -138,6 +138,55 @@ class GoInputOptions:
         ),
     ] = ""
 
+    show_root_full_path: Annotated[
+        bool,
+        _Field(
+            group="docstrings",
+            description="Show the full Python path for the root object heading.",
+        ),
+    ] = True
+
+
+    show_object_full_path: Annotated[
+        bool,
+        _Field(
+            group="docstrings",
+            description="Show the full Python path of every object.",
+        ),
+    ] = False
+
+    show_root_members_full_path: Annotated[
+        bool,
+        _Field(
+            group="headings",
+            description="Show the full Python path of the root members.",
+        ),
+    ] = False
+
+    show_symbol_type_heading: Annotated[
+        bool,
+        _Field(
+            group="headings",
+            description="Show the symbol type in headings (e.g. func and struct).",
+        ),
+    ] = False
+
+    line_length: Annotated[
+        int,
+        _Field(
+            group="signatures",
+            description="Maximum line length when formatting code/signatures.",
+        ),
+    ] = 60
+
+    show_signature: Annotated[
+        bool,
+        _Field(
+            group="signatures",
+            description="Show methods and functions signatures.",
+        ),
+    ] = True
+
     @classmethod
     def coerce(cls, **data: Any) -> MutableMapping[str, Any]:
         """Coerce data."""
