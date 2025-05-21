@@ -10,7 +10,37 @@ A Go handler for mkdocstrings.
 ## Installation
 
 ```bash
-pip install mkdocstrings-go
+pip install --extra-index-url https://test.pypi.org/simple/ mkdocstrings-go-jasiollo
 ```
 
+## Usage
+### Go into your go project directory and run:
+```
+mkdoc new .
+```
+### Add following configuration to mkdocs.yml:
+```
+plugins:
+- mkdocstrings:
+    default_handler: go
 
+theme:
+  name: "material"
+```
+### Make sure you have godoc json installed in ~/.go/bin
+You can install it by running:
+```
+go install github.com/rtfd/godocjson@latest
+```
+
+### Add .md files containing paths to .go files to include in documentation:
+```
+# reference
+
+::: /home/flopper/zprp-go/hello/hello.go
+```
+
+### Serve documentation
+```
+mkdoc serve
+```
