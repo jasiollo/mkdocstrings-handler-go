@@ -1,4 +1,3 @@
-
 import re
 
 from mkdocstrings_handlers.go._internal import config, handler
@@ -6,20 +5,20 @@ from mkdocstrings_handlers.go._internal import config, handler
 
 def test_render_function(handler: handler.GoHandler) -> None:
     res = handler.render(
-            {
-                "doc": " foo bar function\nthis does not newline in dockcomment\n\nthere go the arguments\n\nsomething something description\n",
-                "name": "Foo",
-                "packageName": "main",
-                "packageImportPath": "./",
-                "type": "func",
-                "filename": "./bar.go",
-                "line": 10,
-                "parameters": [{"type": "int", "name": "b"}, {"type": "int", "name": "c"}],
-                "results": [{"type": "int", "name":""}],
-                "recv": "",
-                "orig": "",
-            },
-        config.GoOptions(show_symbol_type_heading = True),
+        {
+            "doc": " foo bar function\nthis does not newline in dockcomment\n\nthere go the arguments\n\nsomething something description\n",
+            "name": "Foo",
+            "packageName": "main",
+            "packageImportPath": "./",
+            "type": "func",
+            "filename": "./bar.go",
+            "line": 10,
+            "parameters": [{"type": "int", "name": "b"}, {"type": "int", "name": "c"}],
+            "results": [{"type": "int", "name": ""}],
+            "recv": "",
+            "orig": "",
+        },
+        config.GoOptions(show_symbol_type_heading=True),
     )
     html = """
     <div class="doc doc-object doc-function">
@@ -58,17 +57,17 @@ def test_render_function(handler: handler.GoHandler) -> None:
 
         </div>
     </div>"""
-    expected =  re.sub(r"\n\s*", "", html)
-    res = re.sub( r">\s+<", r"><",re.sub(r"\n\s*", "", res))
-    assert  res == expected
+    expected = re.sub(r"\n\s*", "", html)
+    res = re.sub(r">\s+<", r"><", re.sub(r"\n\s*", "", res))
+    assert res == expected
 
 
-def test_render_package(handler: handler.GoHandler):
+def test_render_package(handler: handler.GoHandler) -> None:
     package_json = {
         "type": "package",
         "doc": "",
         "name": "main",
-        "importPath": '/some/path',
+        "importPath": "/some/path",
         "imports": [],
         "filenames": ["/some/path/bar.go"],
         "notes": {},
@@ -86,14 +85,14 @@ def test_render_package(handler: handler.GoHandler):
                 "filename": "/some/path/bar.go",
                 "line": 10,
                 "parameters": [{"type": "int", "name": "b"}, {"type": "int", "name": "c"}],
-                "results": [{"type": "int", "name":""}],
+                "results": [{"type": "int", "name": ""}],
                 "recv": "",
                 "orig": "",
-            }
+            },
         ],
     }
 
-    res = handler.render(package_json, config.GoOptions(show_symbol_type_heading = True))
+    res = handler.render(package_json, config.GoOptions(show_symbol_type_heading=True))
 
     html = """
     <div class="doc doc-object doc-module">
@@ -135,6 +134,6 @@ def test_render_package(handler: handler.GoHandler):
         </div>
     </div>"""
 
-    expected =  re.sub(r"\n\s*", "", html)
-    res = re.sub( r">\s+<", r"><",re.sub(r"\n\s*", "", res))
-    assert  res == expected
+    expected = re.sub(r"\n\s*", "", html)
+    res = re.sub(r">\s+<", r"><", re.sub(r"\n\s*", "", res))
+    assert res == expected

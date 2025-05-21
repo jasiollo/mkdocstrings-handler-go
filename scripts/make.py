@@ -128,9 +128,8 @@ def godocjson() -> None:
                 "powershell",
                 "-Command",
                 "Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope LocalMachine -Confirm:$false",
-            ],
-            check=False,
-        )
+            ]
+        )  # noqa: S603, S607, PLW1510
         subprocess.run(["powershell", "-Command", ". ./scripts/install_golang.ps1 -version 1.24.2"])  # noqa: S603, S607, PLW1510
         if os.path.exists("C:/"):
             subprocess.run(["C:/go1.24.2/bin/go.exe", "install", "github.com/rtfd/godocjson@latest"])  # noqa: S603 ,PLW1510

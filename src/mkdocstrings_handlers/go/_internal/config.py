@@ -74,8 +74,7 @@ try:
         )
 
 except ImportError:
-    from dataclasses import dataclass  # type: ignore[no-redef]
-
+    from dataclasses import dataclass  # type: ignore[no-redef] #noqa: I001
     # # two different dataclass classes, at no point are both used at the same time
     # ruff formatting breaks ignore comment
 
@@ -87,9 +86,15 @@ if TYPE_CHECKING:
     from collections.abc import MutableMapping
 
 
+# YORE: EOL 3.9: Remove block.
+_dataclass_options = {"frozen": True}
+if sys.version_info >= (3, 10):
+    _dataclass_options["kw_only"] = True
+
+
 # The input config class is useful to generate a JSON schema, see scripts/mkdocs_hooks.py.
 # YORE: EOL 3.9: Replace `**_dataclass_options` with `frozen=True, kw_only=True` within line.
-@dataclass(frozen=True, kw_only=True)
+@dataclass(**_dataclass_options)  # type: ignore[call-overload]
 class GoInputOptions:
     """Accepted input options."""
 
@@ -140,7 +145,6 @@ class GoInputOptions:
             description="Show the full Python path for the root object heading.",
         ),
     ] = True
-
 
     show_object_full_path: Annotated[
         bool,
@@ -193,7 +197,7 @@ class GoInputOptions:
         return cls(**cls.coerce(**data))
 
 
-@dataclass(frozen=True, kw_only=True)
+@dataclass(**_dataclass_options)  # type: ignore[call-overload]
 class GoOptions(GoInputOptions):  # type: ignore[override,unused-ignore]
     """Final options passed as template context."""
 
@@ -207,7 +211,7 @@ class GoOptions(GoInputOptions):  # type: ignore[override,unused-ignore]
 
 
 # The input config class is useful to generate a JSON schema, see scripts/mkdocs_hooks.py.
-@dataclass(frozen=True, kw_only=True)
+@dataclass(**_dataclass_options)  # type: ignore[call-overload]
 class GoInputConfig:
     """Go handler configuration."""
 
@@ -254,8 +258,8 @@ class GoInputConfig:
         return cls(**cls.coerce(**data))
 
 
-@dataclass(frozen=True, kw_only=True)
-class GoConfig(GoInputConfig):  # type: ignore[override,unused-ignore]
+@dataclass(**_dataclass_options)  # type: ignore[call-overload]
+class GoConfig(GoInputConfig):
     """Go handler configuration."""
 
     # We want to keep a simple dictionary in order to later merge global and local options.

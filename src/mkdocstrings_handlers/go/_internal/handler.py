@@ -42,8 +42,6 @@ else:
 _logger = get_logger(__name__)
 
 
-
-
 class GoHandler(BaseHandler):
     """The Go handler class."""
 
@@ -218,7 +216,7 @@ class GoHandler(BaseHandler):
         except KeyError:
             return ()
         # Update the following code to return the canonical identifier and any aliases.
-        return (data["name"])
+        return data["name"]
 
     def update_env(self, config: dict) -> None:
         """Update the Jinja environment with any custom settings/filters/options for this handler.
@@ -234,7 +232,6 @@ class GoHandler(BaseHandler):
 
         self.env.filters["format_signature"] = rendering.do_format_signature
         self.env.filters["get_template"] = rendering.do_get_template
-
 
     # You can also implement the `get_inventory_urls` and `load_inventory` methods
     # if you want to support loading object inventories.
