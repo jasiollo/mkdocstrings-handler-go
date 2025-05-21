@@ -143,23 +143,21 @@ class GoHandler(BaseHandler):
         parts = identifier.split(".")
         pkg_path, *objects = parts
 
-        if len(objects) > fqn_depth or len(objects) < 1:
+        if len(objects) > fqn_depth:
             raise ValueError(
                 f"Invalid FQN: '{identifier}'. Go identifiers must be at most 'package.Type.Method'",
             )
 
-        obj = method = None
+        obj = method_with_recv = None
         if len(objects) == fqn_depth:
-            obj, method = objects
+            obj, method_with_recv = objects
+        elif len(objects) == 0:
+            obj = identifier.split("/")[-1]
         else:
             obj = objects[0]
 
         valid_path = next(
-            (
-                Path(base) / pkg_path
-                for base in self._paths
-                if (Path(base) / pkg_path).is_dir()
-            ),
+            (Path(base) / pkg_path for base in self._paths if (Path(base) / pkg_path).is_dir()),
             None,
         )
 
@@ -173,12 +171,21 @@ class GoHandler(BaseHandler):
                 capture_output=True,
                 text=True,
             )
+            if not result.stdout:
+                raise ValueError("Provided package contains empty file")
             data = json.loads(result.stdout)
 
-            if method:
+            if method_with_recv:
                 filtered_data = find_dicts_with_value(data, "name", obj)
-                filtered_data = find_dicts_with_value(filtered_data, "name", method)
+                filtered_data = find_dicts_with_value(
+                    filtered_data,
+                    "name",
+                    method_with_recv,
+                )
             else:
+                filtered_data = find_dicts_with_value(data, "names", obj)
+
+            if len(filtered_data) == 0:
                 filtered_data = find_dicts_with_value(data, "name", obj)
             result = filtered_data[0]
             self._collected[identifier] = result
@@ -261,8 +268,11 @@ def find_dicts_with_value(obj: dict, target_key: str, target_value: str) -> list
     results = []
     if isinstance(obj, dict):
         # Check if the current dict has the key and value
-        if target_key in obj and obj[target_key] == target_value:
-            results.append(obj)
+        if target_key in obj:
+            if obj[target_key] == target_value:
+                results.append(obj)
+            elif isinstance(obj[target_key], list):
+                results.extend(obj for elem in obj[target_key] if elem == target_value)
         # Recursively search in each value
         for value in obj.values():
             results.extend(find_dicts_with_value(value, target_key, target_value))
