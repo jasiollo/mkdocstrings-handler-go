@@ -135,7 +135,7 @@ def test_collect_empty_file(go_empty_project: Path) -> None:
         mdx=[],
         mdx_config={},
     )
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="Provided package contains empty file"):
         handler.collect(identifier, GoOptions())
 
 
@@ -256,3 +256,19 @@ def test_collect_const_from_fqname(go_project_extended: Path) -> None:
         "filename": str(go_project_extended / "pkg" / "helper.go"),
         "line": 8,
     }
+
+
+def test_collect_wrong_fqname(go_project_extended: Path) -> None:
+    identifier = "pkg.Nothing"
+    search_path = str(go_project_extended)
+    handler = GoHandler(
+        base_dir=Path("."),
+        config=GoConfig.from_data(paths=[search_path]),
+        mdx=[],
+        mdx_config={},
+    )
+    with pytest.raises(
+        ValueError,
+        match=f"No data found for identifier: '{identifier}'",
+    ):
+        handler.collect(identifier, GoOptions())

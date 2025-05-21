@@ -18,11 +18,10 @@ from mkdocstrings_handlers.go._internal import rendering
 from mkdocstrings_handlers.go._internal.config import GoConfig, GoOptions
 
 if TYPE_CHECKING:
-    from collections.abc import Mapping, MutableMapping
+    from collections.abc import Iterator, Mapping, MutableMapping
 
     from mkdocs.config.defaults import MkDocsConfig
     from mkdocstrings import HandlerOptions
-
 
 # YORE: EOL 3.10: Replace block with line 2.
 if sys.version_info >= (3, 11):
@@ -135,37 +134,34 @@ class GoHandler(BaseHandler):
             raise PluginError(f"Invalid options: {error}") from error
 
     def collect(self, identifier: str, options: GoOptions) -> CollectorItem:
-        """Collect data given an identifier and selection configuration."""
+        """Collect documentation data for a given Go identifier (package, type, or method)."""
         if not identifier:
-            raise AttributeError("Identifier cannot be empty!\n")
+            raise AttributeError("Identifier cannot be empty!")
 
-        fqn_depth = 2
-        parts = identifier.split(".")
-        pkg_path, *objects = parts
+        # Example identifier: mymod/pkg/utils.Type.Method
+        pkg_path, *objects = identifier.split(".")  # Split into package path and optional object parts
+        obj, method = (None, None)
 
-        if len(objects) > fqn_depth:
-            raise ValueError(
-                f"Invalid FQN: '{identifier}'. Go identifiers must be at most 'package.Type.Method'",
-            )
+        max_fqn_parts = 2  # Maximum parts after the package: Type.Method
 
-        obj = method_with_recv = None
-        if len(objects) == fqn_depth:
-            obj, method_with_recv = objects
-        elif len(objects) == 0:
-            obj = identifier.split("/")[-1]
+        if len(objects) > max_fqn_parts:
+            raise ValueError(f"Invalid FQN: '{identifier}'. Max format: 'package.Type.Method'")
+        if len(objects) == max_fqn_parts:
+            obj, method = objects  # Method with receiver
+        elif not objects:
+            obj = identifier.split("/")[-1]  # Only a package name is provided
         else:
-            obj = objects[0]
+            obj = objects[0]  # Single object like a type, constant, or interface
 
         valid_path = next(
             (Path(base) / pkg_path for base in self._paths if (Path(base) / pkg_path).is_dir()),
             None,
         )
-
-        if valid_path is None:
+        if not valid_path:
             raise FileNotFoundError(f"No valid package path found for '{pkg_path}'")
 
         try:
-            result = subprocess.run(  # noqa: S603 i fount no way to fix S603 other than to not run anything
+            result = subprocess.run(
                 [expanduser(self.godocjson_path), valid_path],
                 check=True,
                 capture_output=True,
@@ -173,25 +169,27 @@ class GoHandler(BaseHandler):
             )
             if not result.stdout:
                 raise ValueError("Provided package contains empty file")
+
             data = json.loads(result.stdout)
+            filtered = self._filter_data(data, obj, method)
 
-            if method_with_recv:
-                filtered_data = find_dicts_with_value(data, "name", obj)
-                filtered_data = find_dicts_with_value(
-                    filtered_data,
-                    "name",
-                    method_with_recv,
-                )
-            else:
-                filtered_data = find_dicts_with_value(data, "names", obj)
+            if not filtered:
+                raise ValueError(f"No data found for identifier: '{identifier}'")
 
-            if len(filtered_data) == 0:
-                filtered_data = find_dicts_with_value(data, "name", obj)
-            result = filtered_data[0]
-            self._collected[identifier] = result
-            return result
+            self._collected[identifier] = filtered[0]
+            return filtered[0]
+
         except subprocess.CalledProcessError as e:
             raise RuntimeError(f"godocjson failed:\n{e.stderr.strip()}") from e
+
+    def _filter_data(self, data: dict, obj: str, method: str | None) -> list:
+        if method:
+            # Search by receiver type, then method name
+            data = find_dicts_with_value(data, "name", obj)
+            return find_dicts_with_value(data, "name", method)
+        # Try looking by 'names' (constants, vars), fallback to 'name' (types, interfaces)
+        result = find_dicts_with_value(data, "names", obj)
+        return result or find_dicts_with_value(data, "name", obj)
 
     def render(self, data: CollectorItem, options: GoOptions) -> str:
         """Render a template using provided data and configuration options."""
@@ -222,7 +220,7 @@ class GoHandler(BaseHandler):
         # Update the following code to return the canonical identifier and any aliases.
         return (data.path,)
 
-    def update_env(self, config: dict) -> None:  # noqa: ARG002
+    def update_env(self, config: dict) -> None:
         """Update the Jinja environment with any custom settings/filters/options for this handler.
 
         Parameters:

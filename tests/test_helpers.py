@@ -63,12 +63,12 @@ data = {
 
 
 @pytest.fixture
-def example_data():
+def example_data() -> dict:
     """Fixture to provide access to the pkg package data."""
     return data
 
 
-def test_name_search(example_data):
+def test_name_search(example_data: dict) -> None:
     assert find_dicts_with_value(example_data, "name", "Hello") == [
         {"doc": "Function returning a string\n", "name": "Hello"},
     ]

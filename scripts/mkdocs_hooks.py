@@ -13,6 +13,7 @@ from mkdocstrings_handlers.go._internal.config import GoInputConfig, GoInputOpti
 # TODO: Update when Pydantic supports Python 3.14 (sources and duties as well).
 try:
     from pydantic import TypeAdapter
+
     type_adapter_unavailable = False
 except ImportError:
     type_adapter_unavailable = True
