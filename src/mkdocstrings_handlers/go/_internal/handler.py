@@ -206,7 +206,7 @@ class GoHandler(BaseHandler):
             config=options,
             data=data,  # You might want to rename `data` into something more specific.
             heading_level=options.heading_level,
-            root=False,
+            root=True,
         )
 
     def get_aliases(self, identifier: str) -> tuple[str, ...]:
