@@ -85,7 +85,7 @@ Context:
         {# skipping overloads for now #}
         {# separate signature by default #}
         {% filter format_signature(data, config.line_length) %}
-          {{ data.name}}
+          {{ data.name }}
         {% endfilter %}
       {% endblock %}
       <div class="doc doc-contents {% if root %}first{% endif %}">
