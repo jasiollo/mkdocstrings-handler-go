@@ -1,0 +1,37 @@
+{#- Template for Go modules.
+
+This template renders a Python module.
+
+Context:
+  data dict: The module to render.
+  root (bool): Whether this is the root object, injected with `:::` in a Markdown page.
+  heading_level (int): The HTML heading level to use.
+  config (dict): The configuration options.
+-#}
+
+<div class="doc doc-object doc-module">
+  {% with obj = data, html_id = data.filenames %}
+      <div class="doc doc-contents {% if root %}first{% endif %}">
+        {{ obj.doc }}
+
+        {% block children scoped %}
+          {% set root = False %}
+          {% set heading_level = heading_level +1 %}
+
+          {# {% for ty in obj.types %}
+            {% include ty|get_template with context %}
+          {% endfor %} #}
+
+          {% for function in obj.funcs %}
+            {% with data = function%}
+              {% include function|get_template with context%}
+            {% endwith %}
+          {% endfor %}
+          {# {% filter get_template() %}
+          {% endfilter %} #}
+
+        {% endblock %}
+
+      </div>
+  {% endwith %}
+</div>

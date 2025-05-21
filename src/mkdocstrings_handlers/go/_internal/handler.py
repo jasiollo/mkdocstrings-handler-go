@@ -199,7 +199,7 @@ class GoHandler(BaseHandler):
 
         # You might want to get the template based on the data type.
 
-        template = self.env.get_template(template_name)
+        # template = self.env.get_template(data)
 
         template = rendering.do_get_template(self.env, data)
 
@@ -233,6 +233,7 @@ class GoHandler(BaseHandler):
         self.env.filters["format_types"] = rendering.do_format_types
 
         self.env.filters["format_signature"] = rendering.do_format_signature
+        self.env.filters["get_template"] = rendering.do_get_template
 
 
     # You can also implement the `get_inventory_urls` and `load_inventory` methods

@@ -129,6 +129,7 @@ def do_format_signature(
 _TEMPLATE_MAP = {
     "func": "function.html.jinja",
     "type": "struct.html.jinja",
+    "package": "package.html.jinja"
 }
 
 @pass_environment
@@ -146,4 +147,3 @@ def do_get_template(env: Environment, obj: dict) -> Template:
     if name is None:
         raise AttributeError(f"Object type {obj['type']} does not appear to have a TEMPLATE_MAP entry")
     return env.get_template(name)
-
