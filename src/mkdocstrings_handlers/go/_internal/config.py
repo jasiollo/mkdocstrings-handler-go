@@ -74,7 +74,7 @@ try:
         )
 
 except ImportError:
-    from dataclasses import dataclass  # type: ignore[no-redef] #noqa: I001
+    from dataclasses import dataclass  # type: ignore[no-redef]
     # # two different dataclass classes, at no point are both used at the same time
     # ruff formatting breaks ignore comment
 
@@ -142,7 +142,7 @@ class GoInputOptions:
         bool,
         _Field(
             group="docstrings",
-            description="Show the full Python path for the root object heading.",
+            description="Show the full Go path for the root object heading.",
         ),
     ] = True
 
@@ -150,7 +150,7 @@ class GoInputOptions:
         bool,
         _Field(
             group="docstrings",
-            description="Show the full Python path of every object.",
+            description="Show the full Go path of every object.",
         ),
     ] = False
 
@@ -158,7 +158,7 @@ class GoInputOptions:
         bool,
         _Field(
             group="headings",
-            description="Show the full Python path of the root members.",
+            description="Show the full Go path of the root members.",
         ),
     ] = False
 
@@ -167,6 +167,17 @@ class GoInputOptions:
         _Field(
             group="headings",
             description="Show the symbol type in headings (e.g. func and struct).",
+        ),
+    ] = False
+
+    show_root_heading: Annotated[
+        bool,
+        _Field(
+            group="headings",
+            description="""Show the heading of the object at the root of the documentation tree.
+
+            The root object is the object referenced by the identifier after `:::`.
+            """,
         ),
     ] = False
 
