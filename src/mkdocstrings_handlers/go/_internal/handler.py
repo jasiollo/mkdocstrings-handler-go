@@ -218,7 +218,7 @@ class GoHandler(BaseHandler):
         except KeyError:
             return ()
         # Update the following code to return the canonical identifier and any aliases.
-        return (data.path,)
+        return ("")
 
     def update_env(self, config: dict) -> None:
         """Update the Jinja environment with any custom settings/filters/options for this handler.
