@@ -19,6 +19,7 @@ if TYPE_CHECKING:
 
     from mkdocstrings_handlers.go import GoHandler
 
+
 # --------------------------------------------
 # Function-scoped fixtures.
 # --------------------------------------------

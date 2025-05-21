@@ -120,19 +120,28 @@ def vscode() -> None:
     """Configure VSCode to work on this project."""
     shutil.copytree("config/vscode", ".vscode", dirs_exist_ok=True)
 
+
 def godocjson() -> None:
     if platform.system() == "Windows":
-        subprocess.run(["powershell", "-Command","Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope LocalMachine -Confirm:$false"]) # noqa: S603, S607, PLW1510
-        subprocess.run(["powershell", "-Command",". ./scripts/install_golang.ps1 -version 1.24.2"]) # noqa: S603, S607, PLW1510
+        subprocess.run(
+            [
+                "powershell",
+                "-Command",
+                "Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope LocalMachine -Confirm:$false",
+            ],
+            check=False,
+        )
+        subprocess.run(["powershell", "-Command", ". ./scripts/install_golang.ps1 -version 1.24.2"])  # noqa: S603, S607, PLW1510
         if os.path.exists("C:/"):
             subprocess.run(["C:/go1.24.2/bin/go.exe", "install", "github.com/rtfd/godocjson@latest"])  # noqa: S603 ,PLW1510
         else:
-            subprocess.run(["D:/go1.24.2/bin/go.exe", "install", "github.com/rtfd/godocjson@latest"]) # noqa: S603 ,PLW1510
+            subprocess.run(["D:/go1.24.2/bin/go.exe", "install", "github.com/rtfd/godocjson@latest"])  # noqa: S603 ,PLW1510
     if platform.system() == "Linux":
-        subprocess.run(["/bin/rm", "-rf", "/usr/local/go"])     # noqa: S603, PLW1510
+        subprocess.run(["/bin/rm", "-rf", "/usr/local/go"])  # noqa: S603, PLW1510
         subprocess.run(["/bin/wget", "https://golang.org/dl/go1.24.2.linux-amd64.tar.gz"])  # noqa: S603, PLW1510
-        subprocess.run(["/bin/sudo", "/usr/bin/tar", "-C", "/usr/local",  "-xzf",  "go1.24.2.linux-amd64.tar.gz"])  # noqa: S603, PLW1510
+        subprocess.run(["/bin/sudo", "/usr/bin/tar", "-C", "/usr/local", "-xzf", "go1.24.2.linux-amd64.tar.gz"])  # noqa: S603, PLW1510
         subprocess.run(["/usr/local/go/bin/go", "install", "github.com/rtfd/godocjson@latest"])  # noqa: S603, PLW1510
+
 
 def main() -> int:
     """Main entry point."""
