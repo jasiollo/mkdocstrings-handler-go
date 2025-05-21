@@ -16,7 +16,7 @@ pip install --extra-index-url https://test.pypi.org/simple/ mkdocstrings-go-jasi
 ## Usage
 ### Go into your go project directory and run:
 ```
-mkdoc new .
+mkdocs new .
 ```
 ### Add following configuration to mkdocs.yml:
 ```
