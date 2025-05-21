@@ -72,8 +72,10 @@ try:
             json_schema_extra=_add_markdown_description,
             **kwargs,
         )
+
 except ImportError:
-    from dataclasses import dataclass # type: ignore[no-redef] #noqa: I001
+    from dataclasses import dataclass  # type: ignore[no-redef]
+
     # # two different dataclass classes, at no point are both used at the same time
     # ruff formatting breaks ignore comment
 
@@ -83,6 +85,7 @@ except ImportError:
 
 if TYPE_CHECKING:
     from collections.abc import MutableMapping
+
 
 # The input config class is useful to generate a JSON schema, see scripts/mkdocs_hooks.py.
 # YORE: EOL 3.9: Replace `**_dataclass_options` with `frozen=True, kw_only=True` within line.
@@ -211,7 +214,9 @@ class GoInputConfig:
     # We want to validate options early, so we load them as `GoInputOptions`.
     options: Annotated[
         GoInputOptions,
-        _Field(description="Configuration options for collecting and rendering objects."),
+        _Field(
+            description="Configuration options for collecting and rendering objects.",
+        ),
     ] = field(default_factory=GoInputOptions)
 
     docstring_options: Annotated[
@@ -232,6 +237,11 @@ class GoInputConfig:
             description="The docstring style to use: `auto`, `google`, `numpy`, `sphinx`, or `None`.",
         ),
     ] = None
+
+    paths: Annotated[
+        list[str],
+        _Field(description="The paths in which to search for Go packages."),
+    ] = field(default_factory=lambda: ["."])
 
     @classmethod
     def coerce(cls, **data: Any) -> MutableMapping[str, Any]:
