@@ -166,7 +166,7 @@ class GoHandler(BaseHandler):
             )
             if not valid_path:
                 raise FileNotFoundError(
-                    f"No valid package path found for '{pkg_path} or {base_dir}'\n with paths {self._paths}\n "
+                    f"No valid package path found for '{pkg_path} or {base_dir}'\n with paths {self._paths}\n ",
                 )
 
         try:
