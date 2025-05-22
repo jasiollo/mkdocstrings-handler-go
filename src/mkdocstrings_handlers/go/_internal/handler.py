@@ -151,7 +151,7 @@ class GoHandler(BaseHandler):
         if len(objects) == max_fqn_parts:
             obj, method = objects  # Method with receiver
         elif not objects:
-            obj = identifier.split("/")[-1]  # Only a package name is provided
+            base_dir, obj = identifier.split("/")  # Only a package name is provided
         else:
             obj = objects[0]  # Single object like a type, constant, or interface
 
@@ -160,7 +160,12 @@ class GoHandler(BaseHandler):
             None,
         )
         if not valid_path:
-            raise FileNotFoundError(f"No valid package path found for '{pkg_path}'")
+            valid_path = next(
+                (Path(base) / base_dir for base in self._paths if (Path(base) / base_dir).is_dir()),
+                None,
+            )
+            if not valid_path:
+                raise FileNotFoundError(f"No valid package path found for '{pkg_path} or {base_dir}'\n with paths {self._paths}\n ")
 
         try:
             result = subprocess.run(  # noqa: S603
