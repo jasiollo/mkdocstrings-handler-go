@@ -106,6 +106,14 @@ class GoInputOptions:
         ),
     ] = field(default_factory=dict)
 
+    show_root_function: Annotated[
+        bool,
+        _Field(
+            group="general",
+            description="Show methods and functions if they are root of collected objects.",
+        ),
+    ] = True
+
     heading: Annotated[
         str,
         _Field(

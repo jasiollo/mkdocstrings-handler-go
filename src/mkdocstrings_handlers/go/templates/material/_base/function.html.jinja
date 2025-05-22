@@ -50,10 +50,10 @@ Context:
       {% set show_full_path = config.show_object_full_path %}
     {% endif %}
 
-    {% set function_name = data.filename if show_full_path else data.name %}
+    {% set function_name = data.filename + "-" + data.name if show_full_path else data.name %}
     {% set symbol_type = "function" %}
 
-    {% if not root %}
+    {% if not root or config.show_root_function %}
       {% filter heading(
           heading_level,
           role="function",
