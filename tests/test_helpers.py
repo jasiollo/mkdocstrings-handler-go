@@ -1,6 +1,6 @@
 import pytest
 
-from src.mkdocstrings_handlers.go._internal.handler import (
+from mkdocstrings_handlers.go._internal.handler import (
     find_dicts_with_value,
 )
 

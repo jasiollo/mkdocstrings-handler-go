@@ -136,6 +136,10 @@ class GoHandler(BaseHandler):
         if not identifier:
             raise AttributeError("Identifier cannot be empty!")
 
+        # check for options
+        if options == {}:
+            options = self.get_options({})
+
         # Example identifier: mymod/pkg/utils.Type.Method
         pkg_path, *objects = identifier.split(".")  # Split into package path and optional object parts
         obj, method = (None, None)
@@ -159,7 +163,7 @@ class GoHandler(BaseHandler):
             raise FileNotFoundError(f"No valid package path found for '{pkg_path}'")
 
         try:
-            result = subprocess.run(
+            result = subprocess.run(  # noqa: S603
                 [expanduser(self.godocjson_path), valid_path],
                 check=True,
                 capture_output=True,
@@ -218,7 +222,7 @@ class GoHandler(BaseHandler):
         # Update the following code to return the canonical identifier and any aliases.
         return data["name"]
 
-    def update_env(self, config: dict) -> None:
+    def update_env(self, config: dict) -> None: # noqa: ARG002
         """Update the Jinja environment with any custom settings/filters/options for this handler.
 
         Parameters:
