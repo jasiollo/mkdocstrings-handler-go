@@ -19,7 +19,7 @@ def test_render_function(handler: handler.GoHandler) -> None:
             "recv": "",
             "orig": "",
         },
-        config.GoOptions(show_symbol_type_heading=True, show_root_heading=True, show_root_full_path = False),
+        config.GoOptions(show_symbol_type_heading=True, show_root_heading=True, show_root_full_path=False),
     )
     html = """<div class="doc doc-object doc-function">
                 <h2 id="./bar.go" class="doc doc-heading">

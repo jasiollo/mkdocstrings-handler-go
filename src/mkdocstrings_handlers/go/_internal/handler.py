@@ -165,7 +165,9 @@ class GoHandler(BaseHandler):
                 None,
             )
             if not valid_path:
-                raise FileNotFoundError(f"No valid package path found for '{pkg_path} or {base_dir}'\n with paths {self._paths}\n ")
+                raise FileNotFoundError(
+                    f"No valid package path found for '{pkg_path} or {base_dir}'\n with paths {self._paths}\n "
+                )
 
         try:
             result = subprocess.run(  # noqa: S603
@@ -192,7 +194,7 @@ class GoHandler(BaseHandler):
     def _filter_data(self, data: dict, obj: str, method: str | None) -> list:
         if method:
             # Search by receiver type, then method name
-            data = find_dicts_with_value(data, "name", obj)
+            data = find_dicts_with_value(data, "name", obj) # type: ignore [assignment]
             return find_dicts_with_value(data, "name", method)
         # Try looking by 'names' (constants, vars), fallback to 'name' (types, interfaces)
         result = find_dicts_with_value(data, "names", obj)
