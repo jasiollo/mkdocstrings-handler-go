@@ -222,7 +222,7 @@ class GoHandler(BaseHandler):
         # Update the following code to return the canonical identifier and any aliases.
         return data["name"]
 
-    def update_env(self, config: dict) -> None: # noqa: ARG002
+    def update_env(self, config: dict) -> None:  # noqa: ARG002
         """Update the Jinja environment with any custom settings/filters/options for this handler.
 
         Parameters:

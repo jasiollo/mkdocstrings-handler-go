@@ -10,7 +10,7 @@ from mkdocstrings_handlers.go._internal.handler import GoHandler
 @pytest.fixture
 def go_empty_project(tmp_path: str) -> str:
     # Simulate: mymod/pkg/utils/helper.go
-    mod_path = tmp_path / "mymod"   # type: ignore [operator]
+    mod_path = tmp_path / "mymod"  # type: ignore [operator]
     pkg_path = mod_path / "pkg" / "utils"
     pkg_path.mkdir(parents=True)
 
