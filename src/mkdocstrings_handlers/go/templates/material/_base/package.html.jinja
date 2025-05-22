@@ -87,10 +87,12 @@ Context:
           This block renders the docstring for the module.
           -#}
           {# TODO : docstring template #}
-          {# {% with docstring_sections = module.docstring.parsed %}
-            {# YORE: Bump 2: Replace `"|get_template` with `.html.jinja"` within line. #}
+          {#
+          {% with docstring_sections = module.docstring.parsed %}
+            YORE: Bump 2: Replace `"|get_template` with `.html.jinja"` within line.
             {% include "docstring"|get_template with context %}
-          {% endwith %} #}
+          {% endwith %}
+          #}
           {{ data.doc }}
         {% endblock docstring %}
 
