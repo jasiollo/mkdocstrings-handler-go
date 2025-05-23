@@ -139,3 +139,42 @@ def test_render_package(handler: handler.GoHandler) -> None:
     expected = re.sub(r"\n\s*", "", html)
     res = re.sub(r">\s+<", r"><", re.sub(r"\n\s*", "", res))
     assert res == expected
+
+
+
+def test_render_struct(handler : handler.GoHandler) -> None:
+    res = {
+  "type": "package",
+  "doc": "package says hello\n",
+  "name": "utils",
+  "importPath": ".",
+  "imports": [],
+  "filenames": [
+    "handler.go"
+  ],
+  "notes": {},
+  "bugs": 'null',
+  "consts": [],
+  "types": [
+    {
+      "packageName": "utils",
+      "packageImportPath": ".",
+      "doc": "Struct type with a field\n",
+      "name": "MyType",
+      "type": "type",
+      "filename": "",
+      "line": 0,
+      "consts": [],
+      "vars": [],
+      "funcs": [],
+      "methods": []
+    }
+  ],
+  "vars": [],
+  "funcs": []
+}
+    
+
+    html = handler.render(res, config.GoOptions(show_symbol_type_heading=True, show_root_heading=True))
+
+    print(html)
