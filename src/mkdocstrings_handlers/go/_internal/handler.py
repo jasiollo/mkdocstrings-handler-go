@@ -42,8 +42,6 @@ else:
 _logger = get_logger(__name__)
 
 
-
-
 class GoHandler(BaseHandler):
     """The Go handler class."""
 
@@ -138,6 +136,10 @@ class GoHandler(BaseHandler):
         if not identifier:
             raise AttributeError("Identifier cannot be empty!")
 
+        # check for options
+        if options == {}:
+            options = self.get_options({})
+
         # Example identifier: mymod/pkg/utils.Type.Method
         pkg_path, *objects = identifier.split(".")  # Split into package path and optional object parts
         obj, method = (None, None)
@@ -149,7 +151,7 @@ class GoHandler(BaseHandler):
         if len(objects) == max_fqn_parts:
             obj, method = objects  # Method with receiver
         elif not objects:
-            obj = identifier.split("/")[-1]  # Only a package name is provided
+            base_dir, obj = identifier.split("/")  # Only a package name is provided
         else:
             obj = objects[0]  # Single object like a type, constant, or interface
 
@@ -158,10 +160,17 @@ class GoHandler(BaseHandler):
             None,
         )
         if not valid_path:
-            raise FileNotFoundError(f"No valid package path found for '{pkg_path}'")
+            valid_path = next(
+                (Path(base) / base_dir for base in self._paths if (Path(base) / base_dir).is_dir()),
+                None,
+            )
+            if not valid_path:
+                raise FileNotFoundError(
+                    f"No valid package path found for '{pkg_path} or {base_dir}'\n with paths {self._paths}\n ",
+                )
 
         try:
-            result = subprocess.run(
+            result = subprocess.run(  # noqa: S603
                 [expanduser(self.godocjson_path), valid_path],
                 check=True,
                 capture_output=True,
@@ -185,7 +194,7 @@ class GoHandler(BaseHandler):
     def _filter_data(self, data: dict, obj: str, method: str | None) -> list:
         if method:
             # Search by receiver type, then method name
-            data = find_dicts_with_value(data, "name", obj)
+            data = find_dicts_with_value(data, "name", obj) # type: ignore [assignment]
             return find_dicts_with_value(data, "name", method)
         # Try looking by 'names' (constants, vars), fallback to 'name' (types, interfaces)
         result = find_dicts_with_value(data, "names", obj)
@@ -199,7 +208,7 @@ class GoHandler(BaseHandler):
 
         # You might want to get the template based on the data type.
 
-        template = self.env.get_template(template_name)
+        # template = self.env.get_template(data)
 
         template = rendering.do_get_template(self.env, data)
 
@@ -208,7 +217,7 @@ class GoHandler(BaseHandler):
             config=options,
             data=data,  # You might want to rename `data` into something more specific.
             heading_level=options.heading_level,
-            root=False,
+            root=True,
         )
 
     def get_aliases(self, identifier: str) -> tuple[str, ...]:
@@ -218,9 +227,9 @@ class GoHandler(BaseHandler):
         except KeyError:
             return ()
         # Update the following code to return the canonical identifier and any aliases.
-        return (data.path,)
+        return data["name"]
 
-    def update_env(self, config: dict) -> None:
+    def update_env(self, config: dict) -> None:  # noqa: ARG002
         """Update the Jinja environment with any custom settings/filters/options for this handler.
 
         Parameters:
@@ -233,7 +242,7 @@ class GoHandler(BaseHandler):
         self.env.filters["format_types"] = rendering.do_format_types
 
         self.env.filters["format_signature"] = rendering.do_format_signature
-
+        self.env.filters["get_template"] = rendering.do_get_template
 
     # You can also implement the `get_inventory_urls` and `load_inventory` methods
     # if you want to support loading object inventories.

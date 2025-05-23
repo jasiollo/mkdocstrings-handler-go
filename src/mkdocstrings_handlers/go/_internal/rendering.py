@@ -1,11 +1,9 @@
-
 from jinja2 import Environment, Template, TemplateNotFound, pass_context, pass_environment
 from jinja2.runtime import Context
 from markupsafe import Markup
 from mkdocstrings import get_logger
 
 _logger = get_logger(__name__)
-
 
 
 # def _format_signature(name: Markup, signature: str, line_length:int) -> str:
@@ -59,9 +57,8 @@ _logger = get_logger(__name__)
 #     return signature
 
 
-
 @pass_context
-def do_format_types(ctx: Context, _ : str) -> str:
+def do_format_types(ctx: Context, _: str) -> str:
     data = ctx.get("data")
     if not data:
         _logger.warning("No 'data' found in context for do_format_types.")
@@ -76,11 +73,10 @@ def do_format_types(ctx: Context, _ : str) -> str:
     return template.render(data=data)
 
 
-
-def _format_signature(name: Markup, signature: str, line_length:int) -> str:
-    name = str(name).strip()    # type: ignore[assignment]
+def _format_signature(name: Markup, signature: str, line_length: int) -> str:
+    name = str(name).strip()  # type: ignore[assignment]
     signature = signature.strip()
-    if len(name+signature) < line_length:
+    if len(name + signature) < line_length:
         return name + signature
 
     # TODO: add _get_formatter()
@@ -89,6 +85,7 @@ def _format_signature(name: Markup, signature: str, line_length:int) -> str:
 
     # very temporary solution
     return name + "\n" + signature
+
 
 @pass_context
 def do_format_signature(
@@ -126,10 +123,13 @@ def do_format_signature(
         ),
     )
 
+
 _TEMPLATE_MAP = {
     "func": "function.html.jinja",
     "type": "struct.html.jinja",
+    "package": "package.html.jinja",
 }
+
 
 @pass_environment
 def do_get_template(env: Environment, obj: dict) -> Template:
@@ -146,4 +146,3 @@ def do_get_template(env: Environment, obj: dict) -> Template:
     if name is None:
         raise AttributeError(f"Object type {obj['type']} does not appear to have a TEMPLATE_MAP entry")
     return env.get_template(name)
-

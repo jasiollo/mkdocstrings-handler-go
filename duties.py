@@ -79,11 +79,12 @@ def check_quality(ctx: Context) -> None:
         title=pyprefix("Checking code quality"),
     )
 
+
 @duty
 def fix_quality(ctx: Context) -> None:
     """Fix the code quality."""
     ctx.run(
-        tools.ruff.check(*PY_SRC_LIST, config="config/ruff.toml", fix = True),
+        tools.ruff.check(*PY_SRC_LIST, config="config/ruff.toml", fix=True),
         title=pyprefix("Checking code quality"),
     )
 

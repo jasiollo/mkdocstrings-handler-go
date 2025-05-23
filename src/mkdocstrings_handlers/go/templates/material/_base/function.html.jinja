@@ -41,7 +41,7 @@ Context:
   {% with obj = data, html_id = data.filename %}
 
     {% if root %}
-      {% set show_full_path = config.show_root_full_path %}
+      {% set show_full_path = config.show_root_full_path and config.show_full_path %}
       {% set root_members = True %}
     {% elif root_members %}
       {% set show_full_path = config.show_root_members_full_path or config.show_object_full_path %}
@@ -50,10 +50,10 @@ Context:
       {% set show_full_path = config.show_object_full_path %}
     {% endif %}
 
-    {% set function_name = data.filename if show_full_path else data.name %}
+    {% set function_name = data.filename + "-" + data.name if show_full_path else data.name %}
     {% set symbol_type = "function" %}
 
-    {% if not root %}
+    {% if not root or config.show_root_function %}
       {% filter heading(
           heading_level,
           role="function",
@@ -85,7 +85,7 @@ Context:
         {# skipping overloads for now #}
         {# separate signature by default #}
         {% filter format_signature(data, config.line_length) %}
-          {{ data.name}}
+          {{ data.name }}
         {% endfilter %}
       {% endblock %}
       <div class="doc doc-contents {% if root %}first{% endif %}">

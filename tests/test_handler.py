@@ -10,7 +10,7 @@ from mkdocstrings_handlers.go._internal.handler import GoHandler
 @pytest.fixture
 def go_empty_project(tmp_path: str) -> str:
     # Simulate: mymod/pkg/utils/helper.go
-    mod_path = tmp_path / "mymod"
+    mod_path = tmp_path / "mymod"  # type: ignore [operator]
     pkg_path = mod_path / "pkg" / "utils"
     pkg_path.mkdir(parents=True)
 
@@ -22,7 +22,7 @@ def go_empty_project(tmp_path: str) -> str:
 @pytest.fixture
 def go_project(tmp_path: str) -> str:
     # Simulate: mymod/pkg/utils/helper.go
-    mod_path = tmp_path / "mymod"
+    mod_path = tmp_path / "mymod"  # type: ignore [operator]
     pkg_path = mod_path / "pkg" / "utils"
     pkg_path.mkdir(parents=True)
 
@@ -52,7 +52,7 @@ func (m MyType) Method() string {
 @pytest.fixture
 def go_project_extended(tmp_path: str) -> str:
     # Simulate: mymod/pkg/helper.go
-    mod_path = tmp_path / "mymodule"
+    mod_path = tmp_path / "mymodule"  # type: ignore [operator]
     pkg_path = mod_path / "pkg"
     pkg_path.mkdir(parents=True)
 
@@ -105,12 +105,12 @@ def go_project_extended(tmp_path: str) -> str:
 
 def test_empty_id(handler: GoHandler) -> None:
     with pytest.raises(AttributeError):
-        handler.collect("", GoConfig())
+        handler.collect("", GoOptions())
 
 
 def test_identifier_does_not_exist(handler: GoHandler) -> None:
     with pytest.raises(FileNotFoundError):
-        handler.collect("noway/iamnothere", GoConfig())
+        handler.collect("noway/iamnothere", GoOptions())
 
 
 def test_collect_with_package_dock(go_project: Path) -> None:
