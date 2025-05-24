@@ -186,6 +186,10 @@ class GoHandler(BaseHandler):
                 raise ValueError(f"No data found for identifier: '{identifier}'")
 
             self._collected[identifier] = filtered[0]
+            if method:
+                self._get_code_snippet(identifier, method)
+            else:
+                self._get_code_snippet(identifier, obj)
             return filtered[0]
 
         except subprocess.CalledProcessError as e:
@@ -199,6 +203,32 @@ class GoHandler(BaseHandler):
         # Try looking by 'names' (constants, vars), fallback to 'name' (types, interfaces)
         result = find_dicts_with_value(data, "names", obj)
         return result or find_dicts_with_value(data, "name", obj)
+
+    def _get_code_snippet(self, identifier: str, obj: str) -> None:
+        type_name = self._collected[identifier].get("type")
+        path = self._collected[identifier].get("packageImportPath")
+        package_name = self._collected[identifier].get("packageName")
+
+        if type_name == "package":
+            self._collected[identifier]["code"] = None
+            self._collected[identifier]["relative_path"] = None
+            return
+        path, line_nr = find_string_in_go_files(path, obj, type_name)
+        if type_name != "type":
+            line_nr = self._collected[identifier].get("line")
+
+        with open(path) as f:
+            lines = f.readlines()
+
+        block = extract_go_block(lines, start_line=line_nr, block_type=type_name)
+        parsed = "".join(block)
+        self._collected[identifier]["code"] = parsed
+
+        index = path.find(package_name)
+        if index != -1:
+            path = path[index:]
+
+        self._collected[identifier]["relative_path"] = path
 
     def render(self, data: CollectorItem, options: GoOptions) -> str:
         """Render a template using provided data and configuration options."""
@@ -290,23 +320,50 @@ def find_dicts_with_value(obj: dict, target_key: str, target_value: str) -> list
     return results
 
 
+# def find_line_numbers(file_path, search_string):
+#     with open(file_path) as file:
+#         return [i + 1 for i, line in enumerate(file)
+#                 if line.strip() == search_string and not line.strip().startswith("//")]
+
+
 def find_line_numbers(file_path, search_string):
     with open(file_path) as file:
-        return [i + 1 for i, line in enumerate(file) if search_string in line and not line.strip().startswith("//")]
-    
+        for i, line in enumerate(file, 1):
+            stripped = line.strip()
+            splitted = line.split(" ")
+            if search_string in splitted and not stripped.startswith("//"):
+                return i
+    return None
+
+
+def find_string_in_go_files(search_dir, search_string, type):
+    results = []
+    for root, _, files in os.walk(search_dir):
+        for file in files:
+            if file.endswith(".go"):
+                filepath = os.path.join(root, file)
+                with open(filepath, encoding="utf-8", errors="ignore") as f:
+                    for i, line in enumerate(f, start=1):
+                        stripped = line.strip()
+                        # splitted = line.split(" ")
+                        if search_string in stripped and not stripped.startswith("//"):
+                            return (filepath, i)
+    return None
+
 
 # def parse_code(file_path, obj_name):
+
 
 def extract_go_block(lines, start_line, block_type):
     start_line -= 1  # Convert to 0-based index
     block = []
-    openers = {'{': '}', '(': ')'}
-    
-    if block_type in ['func', 'type']:
-        opener, closer = '{', '}'
-    elif block_type == 'const':
-        if lines[start_line].strip().startswith('const ('):
-            opener, closer = '(', ')'
+    openers = {"{": "}", "(": ")"}
+
+    if block_type in ["func", "type"]:
+        opener, closer = "{", "}"
+    elif block_type in ["const", "var"]:
+        if lines[start_line].strip().startswith("const (") or lines[start_line].strip().startswith("var ("):
+            opener, closer = "(", ")"
         else:
             return [lines[start_line]]  # single-line const
     else:
@@ -314,7 +371,7 @@ def extract_go_block(lines, start_line, block_type):
 
     depth = 0
     found_start = False
-    
+
     for line in lines[start_line:]:
         if not found_start:
             if opener in line:
