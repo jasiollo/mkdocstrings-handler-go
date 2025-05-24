@@ -4,7 +4,7 @@ from pathlib import Path
 import pytest
 
 from mkdocstrings_handlers.go._internal.config import GoConfig, GoOptions
-from mkdocstrings_handlers.go._internal.handler import GoHandler
+from mkdocstrings_handlers.go._internal.handler import GoHandler, find_line_numbers, extract_go_block
 
 
 @pytest.fixture
@@ -98,6 +98,22 @@ def go_project_extended(tmp_path: str) -> str:
     func (m MyType) Greet(name string) string {
         return "Hello, " + name
     }
+
+    // Embedded struct - Person
+    type Person struct {
+    Name string
+    Address struct {
+        Street string
+        City   string
+    }
+    }
+
+    // Block of variables
+    var (
+    a int
+    b = "text"
+    c float64 = 3.14
+    )
     """,
     )
     return mod_path
@@ -272,3 +288,91 @@ def test_collect_wrong_fqname(go_project_extended: Path) -> None:
         match=f"No data found for identifier: '{identifier}'",
     ):
         handler.collect(identifier, GoOptions())
+
+
+def test_get_func_code(go_project_extended: Path) -> None:
+    identifier = "pkg.Greeter"
+    search_path = str(go_project_extended)
+    handler = GoHandler(
+        base_dir=Path("."),
+        config=GoConfig.from_data(paths=[search_path]),
+        mdx=[],
+        mdx_config={},
+    )
+    handler.collect(identifier, GoOptions())
+    assert handler._collected[identifier] == {
+        "packageName": "utils",
+        "packageImportPath": str(go_project_extended / "pkg"),
+        "doc": "Interface declaration\n",
+        "name": "Greeter",
+        "type": "type",
+        "filename": "",
+        "line": 0,  # might be confusing but that's how godocsjson works
+        "consts": [],
+        "vars": [],
+        "funcs": [],
+        "methods": [],
+        "code": "type Greeter interface {\nGreet(name string) string}",
+    }
+
+
+def test_find_line_number(go_project_extended: Path) -> None:
+    identifier = "pkg.Greeter"
+    search_path = str(go_project_extended)
+    handler = GoHandler(
+        base_dir=Path("."),
+        config=GoConfig.from_data(paths=[search_path]),
+        mdx=[],
+        mdx_config={},
+    )
+    handler.collect(identifier, GoOptions())
+    result = find_line_numbers(
+        f"""{handler._collected[identifier].get("packageImportPath")}/helper.go""",
+        handler._collected[identifier].get("name"),
+    )
+    assert result[0] == 17
+
+
+def test_xd(go_project_extended: Path):
+    identifier = "pkg.Greeter"
+    search_path = str(go_project_extended)
+    handler = GoHandler(
+        base_dir=Path("."),
+        config=GoConfig.from_data(paths=[search_path]),
+        mdx=[],
+        mdx_config={},
+    )
+    handler.collect(identifier, GoOptions())
+    result = find_line_numbers(
+        f"""{handler._collected[identifier].get("packageImportPath")}/helper.go""",
+        handler._collected[identifier].get("name"),
+    )
+
+    with open(f"""{handler._collected[identifier].get("packageImportPath")}/helper.go""") as f:
+        lines = f.readlines()
+
+    block = extract_go_block(lines, start_line=result[0], block_type='type')
+    parsed = "".join(block)
+    assert parsed == "    type Greeter interface {\n        Greet(name string) string\n    }\n"
+ 
+def test_dd(go_project_extended: Path):
+    identifier = "pkg.Person"
+    search_path = str(go_project_extended)
+    handler = GoHandler(
+        base_dir=Path("."),
+        config=GoConfig.from_data(paths=[search_path]),
+        mdx=[],
+        mdx_config={},
+    )
+    handler.collect(identifier, GoOptions())
+    result = find_line_numbers(
+        f"""{handler._collected[identifier].get("packageImportPath")}/helper.go""",
+        handler._collected[identifier].get("name"),
+    )
+
+    with open(f"""{handler._collected[identifier].get("packageImportPath")}/helper.go""") as f:
+        lines = f.readlines()
+
+    block = extract_go_block(lines, start_line=result[0], block_type='type')
+    parsed = "".join(block)
+    assert parsed == '    type Person struct {\n    Name string\n    Address struct {\n        Street string\n        City   string\n    }\n    }\n'

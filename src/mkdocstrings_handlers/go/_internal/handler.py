@@ -194,7 +194,7 @@ class GoHandler(BaseHandler):
     def _filter_data(self, data: dict, obj: str, method: str | None) -> list:
         if method:
             # Search by receiver type, then method name
-            data = find_dicts_with_value(data, "name", obj) # type: ignore [assignment]
+            data = find_dicts_with_value(data, "name", obj)  # type: ignore [assignment]
             return find_dicts_with_value(data, "name", method)
         # Try looking by 'names' (constants, vars), fallback to 'name' (types, interfaces)
         result = find_dicts_with_value(data, "names", obj)
@@ -288,3 +288,43 @@ def find_dicts_with_value(obj: dict, target_key: str, target_value: str) -> list
         for item in obj:
             results.extend(find_dicts_with_value(item, target_key, target_value))
     return results
+
+
+def find_line_numbers(file_path, search_string):
+    with open(file_path) as file:
+        return [i + 1 for i, line in enumerate(file) if search_string in line and not line.strip().startswith("//")]
+    
+
+# def parse_code(file_path, obj_name):
+
+def extract_go_block(lines, start_line, block_type):
+    start_line -= 1  # Convert to 0-based index
+    block = []
+    openers = {'{': '}', '(': ')'}
+    
+    if block_type in ['func', 'type']:
+        opener, closer = '{', '}'
+    elif block_type == 'const':
+        if lines[start_line].strip().startswith('const ('):
+            opener, closer = '(', ')'
+        else:
+            return [lines[start_line]]  # single-line const
+    else:
+        return []
+
+    depth = 0
+    found_start = False
+    
+    for line in lines[start_line:]:
+        if not found_start:
+            if opener in line:
+                found_start = True
+                depth += line.count(opener) - line.count(closer)
+            block.append(line)
+        else:
+            block.append(line)
+            depth += line.count(opener) - line.count(closer)
+            if depth == 0:
+                break
+
+    return block
