@@ -101,14 +101,12 @@ Context:
           {% set heading_level = heading_level +1 %}
 
           {% for ty in obj.types %}
-  <p>DEBUG: Rendering type: {{ ty | tojson }}</p>
   {% with data = ty %}
     {% include ty|get_template with context %}
 {% endwith %}
 {% endfor %}
  {# Render consts #}
           {% for constant in obj.consts %}
-            <p>DEBUG: Rendering const: {{ constant | tojson }}</p>
             {% with data = constant %}
               {% include constant|get_template with context %}
             {% endwith %}
