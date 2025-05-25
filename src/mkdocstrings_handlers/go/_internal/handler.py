@@ -243,6 +243,8 @@ class GoHandler(BaseHandler):
 
         self.env.filters["format_signature"] = rendering.do_format_signature
         self.env.filters["get_template"] = rendering.do_get_template
+        self.env.filters["format_struct_signature"] = rendering.do_format_struct_signature
+
 
     # You can also implement the `get_inventory_urls` and `load_inventory` methods
     # if you want to support loading object inventories.

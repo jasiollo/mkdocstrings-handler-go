@@ -124,10 +124,58 @@ def do_format_signature(
     )
 
 
+def _format_struct_signature(name: Markup, signature: str, line_length: int) -> str:
+    name = str(name).strip()
+    signature = signature.strip()
+    if len(name + signature) < line_length:
+        return name + " " + signature
+
+    return name + "\n" + signature
+
+
+
+@pass_context
+def do_format_struct_signature(
+    context: Context,
+    struct_path: Markup,
+    struct: dict,
+    line_length: int,
+) -> str:
+    """Format a Go struct type signature.
+
+    Args:
+        context: Jinja context
+        struct_path: Path to the struct (used as label)
+        struct: Struct object with name, fields, etc.
+        line_length: Max line length
+
+    Returns:
+        Highlighted formatted signature
+    """
+    env = context.environment
+    template = env.get_template("struct_signature.html.jinja")
+
+    new_context = context.parent
+    signature = template.render(new_context, struct=struct, signature=True)
+    signature = _format_struct_signature(struct_path, signature, line_length)
+
+    return str(
+        env.filters["highlight"](
+            Markup.escape(signature),
+            language="go",
+            inline=False,
+            classes=["doc-signature"],
+            linenums=False,
+        )
+    )
+
+
+
 _TEMPLATE_MAP = {
     "func": "function.html.jinja",
     "type": "struct.html.jinja",
     "package": "package.html.jinja",
+    "const": "const.html.jinja",
 }
 
 
@@ -143,6 +191,8 @@ def do_get_template(env: Environment, obj: dict) -> Template:
         A template name.
     """
     name = _TEMPLATE_MAP.get(obj["type"])
+    print(f"get_template called for type: {obj.get('type')}")
+    print(name)
     if name is None:
         raise AttributeError(f"Object type {obj['type']} does not appear to have a TEMPLATE_MAP entry")
     return env.get_template(name)

@@ -21,6 +21,7 @@ def test_render_function(handler: handler.GoHandler) -> None:
         },
         config.GoOptions(show_symbol_type_heading=True, show_root_heading=True, show_root_full_path=False),
     )
+    print(res)
     html = """<div class="doc doc-object doc-function">
                 <h2 id="./bar.go" class="doc doc-heading">
                     <code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>
@@ -178,3 +179,48 @@ def test_render_struct(handler : handler.GoHandler) -> None:
     html = handler.render(res, config.GoOptions(show_symbol_type_heading=True, show_root_heading=True))
 
     print(html)
+
+
+
+
+
+def test_render_const(handler : handler.GoHandler) -> None:
+    res = {
+  "type": "package",
+  "doc": "package says hello\n",
+  "name": "utils",
+  "importPath": "test_folder",
+  "imports": [],
+  "filenames": [
+    "test_folder/hander.go"
+  ],
+  "notes": {},
+  "bugs": 'null',
+  "consts": [
+    {
+      "packageName": "utils",
+      "packageImportPath": "test_folder",
+      "doc": "Another constant\n",
+      "names": [
+        "Number"
+      ],
+      "type": "const",
+      "filename": "test_folder/hander.go",
+      "line": 8
+    },
+    {
+      "packageName": "utils",
+      "packageImportPath": "test_folder",
+      "doc": "Constant declaration\n",
+      "names": [
+        "Version"
+      ],
+      "type": "const",
+      "filename": "test_folder/hander.go",
+      "line": 5
+    }
+  ],
+  "types": [],
+  "vars": [],
+  "funcs": []
+}
