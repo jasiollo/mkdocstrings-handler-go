@@ -4,7 +4,9 @@ from pathlib import Path
 import pytest
 
 from mkdocstrings_handlers.go._internal.config import GoConfig, GoOptions
-from mkdocstrings_handlers.go._internal.handler import GoHandler
+from mkdocstrings_handlers.go._internal.handler import (
+    GoHandler,
+)
 
 
 @pytest.fixture
@@ -61,7 +63,7 @@ def go_project_extended(tmp_path: str) -> str:
     (pkg_path / "helper.go").write_text(
         """
     // package says hello
-    package utils
+    package pkg
 
     import "fmt"
 
@@ -98,8 +100,25 @@ def go_project_extended(tmp_path: str) -> str:
     func (m MyType) Greet(name string) string {
         return "Hello, " + name
     }
+
+    // Embedded struct - Person
+    type Person struct {
+    Name string
+    Address struct {
+        Street string
+        City   string
+    }
+    }
+
+    // Block of variables
+    var (
+    A int
+    B = "text"
+    C float64 = 3.14
+    )
     """,
     )
+
     return mod_path
 
 
@@ -173,6 +192,8 @@ def test_collect_function_from_fqn(go_project: Path) -> None:
         "results": [{"type": "string", "name": ""}],
         "recv": "",
         "orig": "",
+        "code": 'func Hello() string {\n    return "hello"\n}\n',
+        "relative_path": "utils/helper.go",
     }
 
 
@@ -198,6 +219,8 @@ def test_collect_method_from_fqn(go_project: Path) -> None:
         "results": [{"type": "string", "name": ""}],
         "recv": "MyType",
         "orig": "MyType",
+        "code": 'func (m MyType) Method() string {\n\treturn "hello"\n}\n',
+        "relative_path": "utils/helper.go",
     }
 
 
@@ -212,7 +235,7 @@ def test_collect_interface_from_fqname(go_project_extended: Path) -> None:
     )
     handler.collect(identifier, GoOptions())
     assert handler._collected[identifier] == {
-        "packageName": "utils",
+        "packageName": "pkg",
         "packageImportPath": str(go_project_extended / "pkg"),
         "doc": "Interface declaration\n",
         "name": "Greeter",
@@ -223,6 +246,8 @@ def test_collect_interface_from_fqname(go_project_extended: Path) -> None:
         "vars": [],
         "funcs": [],
         "methods": [],
+        "code": "    type Greeter interface {\n        Greet(name string) string\n    }\n",
+        "relative_path": "pkg/helper.go",
     }
 
 
@@ -237,24 +262,29 @@ def test_collect_const_from_fqname(go_project_extended: Path) -> None:
     )
     handler.collect(identifier, GoOptions())
     assert handler._collected[identifier] == {
-        "packageName": "utils",
+        "packageName": "pkg",
         "packageImportPath": str(go_project_extended / "pkg"),
         "doc": "Another constant\n",
         "names": ["Number"],
         "type": "const",
         "filename": str(go_project_extended / "pkg" / "helper.go"),
         "line": 11,
+        "code": "    type Greeter interface {\n        Greet(name string) string\n    }\n",
+        "relative_path": "pkg/helper.go",
+        "code": "    const Number = 777\n",
     }
     identifier = "pkg.Version"
     handler.collect(identifier, GoOptions())
     assert handler._collected[identifier] == {
-        "packageName": "utils",
+        "packageName": "pkg",
         "packageImportPath": str(go_project_extended / "pkg"),
         "doc": "Constant declaration\n",
         "names": ["Version"],
         "type": "const",
         "filename": str(go_project_extended / "pkg" / "helper.go"),
         "line": 8,
+        "relative_path": "pkg/helper.go",
+        "code": '    const Version = "1.0.0"\n',
     }
 
 
@@ -272,3 +302,70 @@ def test_collect_wrong_fqname(go_project_extended: Path) -> None:
         match=f"No data found for identifier: '{identifier}'",
     ):
         handler.collect(identifier, GoOptions())
+
+
+def test_interface(go_project_extended: Path):
+    identifier = "pkg.Greeter"
+    search_path = str(go_project_extended)
+    handler = GoHandler(
+        base_dir=Path("."),
+        config=GoConfig.from_data(paths=[search_path]),
+        mdx=[],
+        mdx_config={},
+    )
+    handler.collect(identifier, GoOptions())
+    assert (
+        handler._collected[identifier]["code"]
+        == "    type Greeter interface {\n        Greet(name string) string\n    }\n"
+    )
+    assert handler._collected[identifier]["relative_path"] == "pkg/helper.go"
+
+
+def test_nested_struct(go_project_extended: Path):
+    identifier = "pkg.Person"
+    search_path = str(go_project_extended)
+    handler = GoHandler(
+        base_dir=Path("."),
+        config=GoConfig.from_data(paths=[search_path]),
+        mdx=[],
+        mdx_config={},
+    )
+    handler.collect(identifier, GoOptions())
+    assert (
+        handler._collected[identifier]["code"]
+        == "    type Person struct {\n    Name string\n    Address struct {\n        Street string\n        City   string\n    }\n    }\n"
+    )
+    assert handler._collected[identifier]["relative_path"] == "pkg/helper.go"
+
+
+def test_multiple_var(go_project_extended: Path):
+    identifier = "pkg.C"
+    search_path = str(go_project_extended)
+    handler = GoHandler(
+        base_dir=Path("."),
+        config=GoConfig.from_data(paths=[search_path]),
+        mdx=[],
+        mdx_config={},
+    )
+    handler.collect(identifier, GoOptions())
+    assert (
+        handler._collected[identifier]["code"] == '    var (\n    A int\n    B = "text"\n    C float64 = 3.14\n    )\n'
+    )
+    assert handler._collected[identifier]["relative_path"] == "pkg/helper.go"
+
+
+def test_balhblah(go_project_extended: Path):
+    identifier = "pkg.MyType.Method"
+    search_path = str(go_project_extended)
+    handler = GoHandler(
+        base_dir=Path("."),
+        config=GoConfig.from_data(paths=[search_path]),
+        mdx=[],
+        mdx_config={},
+    )
+    handler.collect(identifier, GoOptions())
+    assert (
+        handler._collected[identifier]["code"]
+        == '    func (m MyType) Method() string {\n        return fmt.Sprintf("ID is %d", m.ID)\n    }\n'
+    )
+    assert handler._collected[identifier]["relative_path"] == "pkg/helper.go"
