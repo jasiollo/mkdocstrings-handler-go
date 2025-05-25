@@ -3,7 +3,6 @@ import re
 from mkdocstrings_handlers.go._internal import config, handler
 
 
-
 def normalize_html(html: str) -> str:
     lines = [line.strip() for line in html.strip().splitlines()]
     lines = [line for line in lines if line]
@@ -205,7 +204,6 @@ def test_render_struct(handler : handler.GoHandler) -> None:
    </div>
 </div>"""
 
-    print(html)
     assert normalize_html(html) == normalize_html(res)
 
 
@@ -264,7 +262,7 @@ def test_render_const(handler : handler.GoHandler) -> None:
    </div>
 </div>"""
     assert normalize_html(res) == normalize_html(html)
-    
+
 
 
 

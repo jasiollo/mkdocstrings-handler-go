@@ -241,8 +241,6 @@ def do_get_template(env: Environment, obj: dict) -> Template:
         A template name.
     """
     name = _TEMPLATE_MAP.get(obj["type"])
-    print(f"get_template called for type: {obj.get('type')}")
-    print(name)
     if name is None:
         raise AttributeError(f"Object type {obj['type']} does not appear to have a TEMPLATE_MAP entry")
     return env.get_template(name)
