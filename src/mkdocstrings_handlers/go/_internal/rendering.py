@@ -166,7 +166,7 @@ def do_format_struct_signature(
             inline=False,
             classes=["doc-signature"],
             linenums=False,
-        )
+        ),
     )
 
 
@@ -210,7 +210,7 @@ def do_format_const_signature(
             inline=False,
             classes=["doc-signature"],
             linenums=False,
-        )
+        ),
     )
 
 
