@@ -124,11 +124,109 @@ def do_format_signature(
     )
 
 
+def _format_struct_signature(name: Markup, signature: str, line_length: int) -> str:
+    name_str = str(name).strip()
+    signature = signature.strip()
+    if len(name_str + signature) < line_length:
+        return signature
+
+    return signature
+
+
+
+@pass_context
+def do_format_struct_signature(
+    context: Context,
+    struct_path: Markup,
+    struct: dict,
+    line_length: int,
+) -> str:
+    """Format a Go struct type signature.
+
+    Args:
+        context: Jinja context
+        struct_path: Path to the struct (used as label)
+        struct: Struct object with name, fields, etc.
+        line_length: Max line length
+
+    Returns:
+        Highlighted formatted signature
+    """
+    env = context.environment
+    template = env.get_template("struct_signature.html.jinja")
+
+    new_context = context.parent
+    signature = template.render(new_context, struct=struct, signature=True)
+    signature = _format_struct_signature(struct_path, signature, line_length)
+
+    return str(
+        env.filters["highlight"](
+            Markup.escape(signature),
+            language="go",
+            inline=False,
+            classes=["doc-signature"],
+            linenums=False,
+        ),
+    )
+
+
+def _format_const_signature(name: Markup, signature: str, line_length: int) -> str:
+    name_str = str(name).strip()
+    signature = signature.strip()
+    if len(name_str + signature) < line_length:
+        return signature
+    #return "const " + name + "\n" + signature
+    return signature
+
+@pass_context
+def do_format_const_signature(
+    context: Context,
+    const_path: Markup,
+    const: dict,
+    line_length: int,
+) -> str:
+    """Format a Go const declaration.
+
+    Args:
+        context: Jinja context
+        const_path: Path to the const
+        const: Const object
+        line_length: Max line length
+
+    Returns:
+        Highlighted const declaration
+    """
+    env = context.environment
+    template = env.get_template("const_signature.html.jinja")
+
+    new_context = context.parent
+    signature = template.render(new_context, const=const, signature=True)
+    signature = _format_const_signature(const_path, signature, line_length)
+
+    return str(
+        env.filters["highlight"](
+            Markup.escape(signature),
+            language="go",
+            inline=False,
+            classes=["doc-signature"],
+            linenums=False,
+        ),
+    )
+
+
+
 _TEMPLATE_MAP = {
     "func": "function.html.jinja",
     "type": "struct.html.jinja",
     "package": "package.html.jinja",
+    "const": "const.html.jinja",
 }
+
+
+
+
+
+
 
 
 @pass_environment

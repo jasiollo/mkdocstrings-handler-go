@@ -1,0 +1,24 @@
+{#- struct_signature.html.jinja
+
+Renders: type MyType struct {...}
+
+Context:
+  struct (dict): Struct definition with .name and .fields (optional)
+  config (dict): Configuration
+-#}
+{%- if config.show_signature -%}
+  {%- block logs scoped -%}
+    {{ log.debug("Rendering struct signature for " + struct.name) }}
+  {%- endblock logs -%}
+  type {{ struct.name }} struct
+  {%- if struct.fields %}
+  (
+    {%- for field in struct.fields %}
+      {{ field.name }} {{ field.type }}
+      {%- if not loop.last %}, {% endif -%}
+    {%- endfor %}
+  )
+  {%- else %}
+    {}
+  {%- endif %}
+{%- endif -%}
