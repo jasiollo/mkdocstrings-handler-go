@@ -206,17 +206,6 @@ def test_render_const(handler : handler.GoHandler) -> None:
       ],
       "type": "const",
       "filename": "test_folder/hander.go",
-      "line": 8
-    },
-    {
-      "packageName": "utils",
-      "packageImportPath": "test_folder",
-      "doc": "Constant declaration\n",
-      "names": [
-        "Version"
-      ],
-      "type": "const",
-      "filename": "test_folder/hander.go",
       "line": 5
     }
   ],
@@ -224,3 +213,7 @@ def test_render_const(handler : handler.GoHandler) -> None:
   "vars": [],
   "funcs": []
 }
+    
+    html = handler.render(res, config.GoOptions(show_symbol_type_heading=True, show_root_heading=True))
+
+    print(html)

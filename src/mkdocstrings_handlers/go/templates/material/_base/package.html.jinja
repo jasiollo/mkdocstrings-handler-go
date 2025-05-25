@@ -106,6 +106,13 @@ Context:
     {% include ty|get_template with context %}
 {% endwith %}
 {% endfor %}
+ {# Render consts #}
+          {% for constant in obj.consts %}
+            <p>DEBUG: Rendering const: {{ constant | tojson }}</p>
+            {% with data = constant %}
+              {% include constant|get_template with context %}
+            {% endwith %}
+          {% endfor %}
 
           {% for function in obj.funcs %}
             {% with data = function%}

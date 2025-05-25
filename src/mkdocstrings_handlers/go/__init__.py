@@ -12,6 +12,7 @@ from mkdocstrings_handlers.go._internal.rendering import (
     do_format_types,
     do_get_template,
     do_format_struct_signature,
+    do_format_const_signature,
 )
 
 __all__ = [
@@ -21,6 +22,7 @@ __all__ = [
     "GoInputOptions",
     "GoOptions",
     "do_format_signature",
+    "do_format_const_signature",
     "do_format_types",
     "do_format_struct_signature",
     "do_get_template",
