@@ -125,9 +125,9 @@ def do_format_signature(
 
 
 def _format_struct_signature(name: Markup, signature: str, line_length: int) -> str:
-    name = str(name).strip()
+    name_str = str(name).strip()
     signature = signature.strip()
-    if len(name + signature) < line_length:
+    if len(name_str + signature) < line_length:
         return signature
 
     return signature
@@ -171,9 +171,9 @@ def do_format_struct_signature(
 
 
 def _format_const_signature(name: Markup, signature: str, line_length: int) -> str:
-    name = str(name).strip()
+    name_str = str(name).strip()
     signature = signature.strip()
-    if len(name + signature) < line_length:
+    if len(name_str + signature) < line_length:
         return signature
     #return "const " + name + "\n" + signature
     return signature
