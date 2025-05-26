@@ -85,7 +85,7 @@ Context:
         {# skipping overloads for now #}
         {# separate signature by default #}
         {% filter format_signature(data, config.line_length) %}
-          {{ data.name }}
+          func {{ data.name }}
         {% endfilter %}
       {% endblock %}
       <div class="doc doc-contents {% if root %}first{% endif %}">
@@ -113,11 +113,11 @@ Context:
               {{ data.relative_path }}
               </code></summary>
             {%- endif -%}
-              {{ data.code|highlight(language="go", linestart=data.lineno or 0, linenums=True) }}
+                {{ data.code|format_code(config.line_length, config.format_code)|highlight(language="go", linestart=data.lineno or 0, linenums=True) }}
             </details>
             {% endif %}
         {% endblock source %}
-
+      {{ config.format_code }}
       {% endblock contents%}
       </div>
     {%endif%}

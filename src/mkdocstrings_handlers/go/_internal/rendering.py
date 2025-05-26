@@ -32,19 +32,22 @@ def _format_signature(name: Markup, signature: str, line_length: int) -> str:
 
     print("\n\n-----TOO LONG-----\n\n")
     # try to use golines formatter if installed
+    full = name + signature
+    print(full)
     if(isfile(expanduser("~/go/bin/golines"))):
-        formated = subprocess.run(
+        formatted = subprocess.run(
             [expanduser("~/go/bin/golines"), f"--max-len={line_length}"],
-            stdin = name + signature,
+            input = full,
             capture_output=True,
             text= True,
         )
-        return formated
+        if formatted.stdout != "":
+            return formatted.stdout
 
     # try to manualy format
     code = name + signature
-    code = code.replace("(", "(\n")
-    code = code.replace(")", ")\n")
+    code = code.replace("(", "\n(\n")
+    code = code.replace(")", "\n)\n")
     code = code.replace(", ", ",\n")
     return code
 
@@ -65,12 +68,18 @@ def do_format_code(
     if not format_code or not isfile(expanduser("~/go/bin/golines")):
         return code
     print("\n\n-----FORMAT CODE-----\n\n")
-    return subprocess.run(
+    formatted = subprocess.run(
             [expanduser("~/go/bin/golines"), f"--max-len={line_length}"],
-            stdin = code,
+            input = code,
             capture_output=True,
             text= True,
         )
+    if formatted.stdout !="":
+        return formatted.stdout
+    print("golines failed")
+    print(formatted)
+    # golines failed - no format
+    return code
 
 @pass_context
 def do_format_signature(

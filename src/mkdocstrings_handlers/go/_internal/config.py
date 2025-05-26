@@ -122,6 +122,15 @@ class GoInputOptions:
         ),
     ] = True
 
+    format_code: Annotated[
+        bool,
+        _Field(
+            group="general",
+            description="Show the source code of this object.",
+        ),
+    ] = False
+
+
     heading: Annotated[
         str,
         _Field(
