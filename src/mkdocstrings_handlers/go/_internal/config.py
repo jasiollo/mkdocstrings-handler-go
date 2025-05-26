@@ -114,6 +114,14 @@ class GoInputOptions:
         ),
     ] = True
 
+    show_root_struct: Annotated[
+        bool,
+        _Field(
+            group="general",
+            description="Show structs and interfaces if they are root of collected objects.",
+        ),
+    ] = True
+
     show_source: Annotated[
         bool,
         _Field(
