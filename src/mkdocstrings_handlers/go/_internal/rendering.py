@@ -6,57 +6,6 @@ from mkdocstrings import get_logger
 _logger = get_logger(__name__)
 
 
-# def _format_signature(name: Markup, signature: str, line_length:int) -> str:
-#     name = str(name).strip()
-#     signature = signature.strip()
-#     if len(name+signature) < line_length:
-#         return name + signature
-
-#     # TODO: add _get_formatter()
-#     # and call it in similar way as in python handler
-#     # https://go.dev/blog/gofmt
-
-#     # very temporary solution
-#     return name + "\n" + signature
-
-# @pass_context
-# def do_format_signature(
-#     context: Context,
-#     callable_path: Markup,
-#     function: dict,
-#     line_length: int,
-# ) -> str:
-#     """Format a signature.
-
-#     Parameters:
-#         context: Jinja context, passed automatically.
-#         callable_path: The path of the callable we render the signature of.
-#         function: The function we render the signature of.
-#         line_length: The line length.
-
-#     Returns:
-#         The same code, formatted.
-#     """
-#     env = context.environment
-#     template = env.get_template("signature.html.jinja")
-
-#     new_context = context.parent
-
-#     signature = template.render(new_context, function=function, signature=True)
-#     signature = _format_signature(callable_path, signature, line_length)
-
-#     signature = str(
-#         env.filters["highlight"](
-#             Markup.escape(signature),
-#             language="go",
-#             inline=False,
-#             classes=["doc-signature"],
-#             linenums=False,
-#         ),
-#     )
-#     return signature
-
-
 @pass_context
 def do_format_types(ctx: Context, _: str) -> str:
     data = ctx.get("data")
@@ -85,6 +34,11 @@ def _format_signature(name: Markup, signature: str, line_length: int) -> str:
 
     # very temporary solution
     return name + "\n" + signature
+
+
+def _format_type_signature(name: Markup, signature: str, line_length: int) -> str:
+    signature = signature.strip()
+    return signature
 
 
 @pass_context
@@ -124,16 +78,6 @@ def do_format_signature(
     )
 
 
-def _format_struct_signature(name: Markup, signature: str, line_length: int) -> str:
-    name_str = str(name).strip()
-    signature = signature.strip()
-    if len(name_str + signature) < line_length:
-        return signature
-
-    return signature
-
-
-
 @pass_context
 def do_format_struct_signature(
     context: Context,
@@ -157,7 +101,7 @@ def do_format_struct_signature(
 
     new_context = context.parent
     signature = template.render(new_context, struct=struct, signature=True)
-    signature = _format_struct_signature(struct_path, signature, line_length)
+    signature = _format_type_signature(struct_path, signature, line_length)
 
     return str(
         env.filters["highlight"](
@@ -169,14 +113,6 @@ def do_format_struct_signature(
         ),
     )
 
-
-def _format_const_signature(name: Markup, signature: str, line_length: int) -> str:
-    name_str = str(name).strip()
-    signature = signature.strip()
-    if len(name_str + signature) < line_length:
-        return signature
-    #return "const " + name + "\n" + signature
-    return signature
 
 @pass_context
 def do_format_const_signature(
@@ -201,7 +137,7 @@ def do_format_const_signature(
 
     new_context = context.parent
     signature = template.render(new_context, const=const, signature=True)
-    signature = _format_const_signature(const_path, signature, line_length)
+    signature = _format_type_signature(const_path, signature, line_length)
 
     return str(
         env.filters["highlight"](
