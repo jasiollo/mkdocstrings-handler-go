@@ -32,9 +32,9 @@ def _format_signature(name: Markup, signature: str, line_length: int) -> str:
 
     print("\n\n-----TOO LONG-----\n\n")
     # try to use golines formatter if installed
-    if(isfile(expanduser("~/.go/bin/golines"))):
+    if(isfile(expanduser("~/go/bin/golines"))):
         formated = subprocess.run(
-            expanduser("~/.go/bin/golines"),
+            [expanduser("~/go/bin/golines"), f"--max-len={line_length}"],
             stdin = name + signature,
             capture_output=True,
             text= True,
@@ -53,6 +53,24 @@ def _format_type_signature(name: Markup, signature: str, line_length: int) -> st
     signature = signature.strip()
     return signature
 
+
+def do_format_code(
+    code: str,
+    line_length: int,
+    format_code: bool,
+) -> str:
+    """
+    Format source code block
+    """
+    if not format_code or not isfile(expanduser("~/go/bin/golines")):
+        return code
+    print("\n\n-----FORMAT CODE-----\n\n")
+    return subprocess.run(
+            [expanduser("~/go/bin/golines"), f"--max-len={line_length}"],
+            stdin = code,
+            capture_output=True,
+            text= True,
+        )
 
 @pass_context
 def do_format_signature(
@@ -163,19 +181,12 @@ def do_format_const_signature(
     )
 
 
-
 _TEMPLATE_MAP = {
     "func": "function.html.jinja",
     "type": "struct.html.jinja",
     "package": "package.html.jinja",
     "const": "const.html.jinja",
 }
-
-
-
-
-
-
 
 
 @pass_environment
