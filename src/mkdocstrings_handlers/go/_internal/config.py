@@ -114,6 +114,14 @@ class GoInputOptions:
         ),
     ] = True
 
+    show_source: Annotated[
+        bool,
+        _Field(
+            group="general",
+            description="Show the source code of this object.",
+        ),
+    ] = True
+
     heading: Annotated[
         str,
         _Field(
