@@ -1,7 +1,9 @@
 from jinja2 import Environment, Template, TemplateNotFound, pass_context, pass_environment
 from jinja2.runtime import Context
+from os.path import expanduser, isfile
 from markupsafe import Markup
 from mkdocstrings import get_logger
+import subprocess
 
 _logger = get_logger(__name__)
 
@@ -28,12 +30,23 @@ def _format_signature(name: Markup, signature: str, line_length: int) -> str:
     if len(name + signature) < line_length:
         return name + signature
 
-    # TODO: add _get_formatter()
-    # and call it in similar way as in python handler
-    # https://go.dev/blog/gofmt
+    print("\n\n-----TOO LONG-----\n\n")
+    # try to use golines formatter if installed
+    if(isfile(expanduser("~/.go/bin/golines"))):
+        formated = subprocess.run(
+            expanduser("~/.go/bin/golines"),
+            stdin = name + signature,
+            capture_output=True,
+            text= True,
+        )
+        return formated
 
-    # very temporary solution
-    return name + "\n" + signature
+    # try to manualy format
+    code = name + signature
+    code = code.replace("(", "(\n")
+    code = code.replace(")", ")\n")
+    code = code.replace(", ", ",\n")
+    return code
 
 
 def _format_type_signature(name: Markup, signature: str, line_length: int) -> str:
