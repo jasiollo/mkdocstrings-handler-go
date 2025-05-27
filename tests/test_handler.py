@@ -52,6 +52,36 @@ func (m MyType) Method() string {
 
 
 @pytest.fixture
+def go_project_name_mismatch(tmp_path: str) -> str:
+    # Simulate: mymod/pkg/utils/helper.go
+    mod_path = tmp_path / "mymod"  # type: ignore [operator]
+    pkg_path = mod_path / "pkg" / "utils"
+    pkg_path.mkdir(parents=True)
+
+    (mod_path / "go.mod").write_text("module mymod\n", encoding="utf-8")
+
+    (pkg_path / "helper.go").write_text(
+        """
+// package says hello
+package hello
+
+type MyType struct{}
+// Function that returns greetings to user
+func Hello() string {
+    return "hello"
+}
+
+func (m MyType) Method() string {
+	return "hello"
+}
+""",
+        encoding="utf-8",
+    )
+
+    return mod_path
+
+
+@pytest.fixture
 def go_project_extended(tmp_path: str) -> str:
     # Simulate: mymod/pkg/helper.go
     mod_path = tmp_path / "mymodule"  # type: ignore [operator]
@@ -193,7 +223,7 @@ def test_collect_function_from_fqn(go_project: Path) -> None:
         "recv": "",
         "orig": "",
         "code": 'func Hello() string {\n    return "hello"\n}\n',
-        "relative_path": "utils/helper.go",
+        "relative_path": "pkg/utils/helper.go",
     }
 
 
@@ -220,7 +250,7 @@ def test_collect_method_from_fqn(go_project: Path) -> None:
         "recv": "MyType",
         "orig": "MyType",
         "code": 'func (m MyType) Method() string {\n\treturn "hello"\n}\n',
-        "relative_path": "utils/helper.go",
+        "relative_path": "pkg/utils/helper.go",
     }
 
 
@@ -354,7 +384,7 @@ def test_multiple_var(go_project_extended: Path):
     assert handler._collected[identifier]["relative_path"] == "pkg/helper.go"
 
 
-def test_balhblah(go_project_extended: Path):
+def test_receiver(go_project_extended: Path):
     identifier = "pkg.MyType.Method"
     search_path = str(go_project_extended)
     handler = GoHandler(
@@ -369,3 +399,30 @@ def test_balhblah(go_project_extended: Path):
         == '    func (m MyType) Method() string {\n        return fmt.Sprintf("ID is %d", m.ID)\n    }\n'
     )
     assert handler._collected[identifier]["relative_path"] == "pkg/helper.go"
+
+
+def test_collect_method_from_fqn_mismatch(go_project_name_mismatch: Path) -> None:
+    identifier = "pkg/utils.MyType.Method"
+    search_path = str(go_project_name_mismatch)
+    handler = GoHandler(
+        base_dir=Path("."),
+        config=GoConfig.from_data(paths=[search_path]),
+        mdx=[],
+        mdx_config={},
+    )
+    handler.collect(identifier, GoOptions())
+    assert handler._collected[identifier] == {
+        "doc": "",
+        "name": "Method",
+        "packageName": "hello",
+        "packageImportPath": str(go_project_name_mismatch / "pkg" / "utils"),
+        "type": "func",
+        "filename": str(go_project_name_mismatch / "pkg" / "utils" / "helper.go"),
+        "line": 11,
+        "parameters": [],
+        "results": [{"type": "string", "name": ""}],
+        "recv": "MyType",
+        "orig": "MyType",
+        "code": 'func (m MyType) Method() string {\n\treturn "hello"\n}\n',
+        "relative_path": "pkg/utils/helper.go",
+    }
