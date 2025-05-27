@@ -236,7 +236,9 @@ class GoHandler(BaseHandler):
             item["line"] = line_nr
 
         else:
-            path = item["filename"]
+            path = item.get("filename")
+            if path is None:
+                raise ValueError(f"Field path not found for function\n Perhaps you mistyped package name?")
             line_nr = item["line"]
 
         with open(path) as f:
