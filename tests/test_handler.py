@@ -52,6 +52,69 @@ func (m MyType) Method() string {
 
 
 @pytest.fixture
+def go_project_many_files(tmp_path: str) -> str:
+    mod_path = tmp_path / "mymod"
+    pkg_path = mod_path / "pkg" / "utils"
+    pkg_path.mkdir(parents=True)
+
+    (mod_path / "go.mod").write_text("module mymod\n", encoding="utf-8")
+
+    files = {
+        "helper.go": """
+package utils
+
+type MyType struct{}
+func (m MyType) Method() string { return "hello" }
+""",
+        "math.go": """
+package utils
+
+func Add(a int, b int) int { return a + b }
+""",
+        "string.go": """
+package utils
+
+func Greet(name string) string { return "Hello, " + name }
+""",
+    }
+
+    for name, content in files.items():
+        (pkg_path / name).write_text(content, encoding="utf-8")
+
+    return mod_path
+
+
+@pytest.fixture
+def go_project_name_mismatch(tmp_path: str) -> str:
+    # Simulate: mymod/pkg/utils/helper.go
+    mod_path = tmp_path / "mymod"  # type: ignore [operator]
+    pkg_path = mod_path / "pkg" / "utils"
+    pkg_path.mkdir(parents=True)
+
+    (mod_path / "go.mod").write_text("module mymod\n", encoding="utf-8")
+
+    (pkg_path / "helper.go").write_text(
+        """
+// package says hello
+package hello
+
+type MyType struct{}
+// Function that returns greetings to user
+func Hello() string {
+    return "hello"
+}
+
+func (m MyType) Method() string {
+	return "hello"
+}
+""",
+        encoding="utf-8",
+    )
+
+    return mod_path
+
+
+@pytest.fixture
 def go_project_extended(tmp_path: str) -> str:
     # Simulate: mymod/pkg/helper.go
     mod_path = tmp_path / "mymodule"  # type: ignore [operator]
@@ -142,7 +205,72 @@ def test_collect_with_package_dock(go_project: Path) -> None:
         mdx_config={},
     )
     handler.collect(identifier, GoOptions())
-    assert handler._collected[identifier].get("doc") == "package says hello\n"
+    assert handler._collected[identifier] == {
+        "type": "package",
+        "doc": "package says hello\n",
+        "name": "utils",
+        "importPath": str(go_project / "pkg" / "utils"),
+        "imports": [],
+        "filenames": [
+            str(go_project / "pkg" / "utils" / "helper.go"),
+        ],
+        "notes": {},
+        "bugs": None,
+        "consts": [],
+        "types": [
+            {
+                "packageName": "utils",
+                "packageImportPath": str(go_project / "pkg" / "utils"),
+                "doc": "",
+                "name": "MyType",
+                "type": "type",
+                "relative_path": "pkg/utils/helper.go",
+                "filename": "",
+                "line": 5,
+                "consts": [],
+                "code": "type MyType struct{}\n",
+                "vars": [],
+                "funcs": [],
+                "methods": [
+                    {
+                        "doc": "",
+                        "name": "Method",
+                        "packageName": "utils",
+                        "packageImportPath": str(go_project / "pkg" / "utils"),
+                        "type": "func",
+                        "filename": str(go_project / "pkg" / "utils" / "helper.go"),
+                        "line": 11,
+                        "parameters": [],
+                        "results": [{"type": "string", "name": ""}],
+                        "recv": "MyType",
+                        "orig": "MyType",
+                        "code": 'func (m MyType) Method() string {\n\treturn "hello"\n}\n',
+                        "relative_path": "pkg/utils/helper.go",
+                    },
+                ],
+            },
+        ],
+        "vars": [],
+        "funcs": [
+            {
+                "doc": "Function that returns greetings to user\n",
+                "name": "Hello",
+                "packageName": "utils",
+                "packageImportPath": str(go_project / "pkg" / "utils"),
+                "type": "func",
+                "filename": str(go_project / "pkg" / "utils" / "helper.go"),
+                "line": 7,
+                "parameters": [],
+                "results": [{"type": "string", "name": ""}],
+                "recv": "",
+                "orig": "",
+                "code": 'func Hello() string {\n    return "hello"\n}\n',
+                "relative_path": "pkg/utils/helper.go",
+            },
+        ],
+        "code": None,
+        "relative_path": None,
+    }
 
 
 def test_collect_empty_file(go_empty_project: Path) -> None:
@@ -193,7 +321,7 @@ def test_collect_function_from_fqn(go_project: Path) -> None:
         "recv": "",
         "orig": "",
         "code": 'func Hello() string {\n    return "hello"\n}\n',
-        "relative_path": "utils/helper.go",
+        "relative_path": "pkg/utils/helper.go",
     }
 
 
@@ -220,7 +348,7 @@ def test_collect_method_from_fqn(go_project: Path) -> None:
         "recv": "MyType",
         "orig": "MyType",
         "code": 'func (m MyType) Method() string {\n\treturn "hello"\n}\n',
-        "relative_path": "utils/helper.go",
+        "relative_path": "pkg/utils/helper.go",
     }
 
 
@@ -241,7 +369,7 @@ def test_collect_interface_from_fqname(go_project_extended: Path) -> None:
         "name": "Greeter",
         "type": "type",
         "filename": "",
-        "line": 0,  # might be confusing but that's how godocsjson works
+        "line": 17,
         "consts": [],
         "vars": [],
         "funcs": [],
@@ -353,7 +481,7 @@ def test_multiple_var(go_project_extended: Path) -> None:
     assert handler._collected[identifier]["relative_path"] == "pkg/helper.go"
 
 
-def test_balhblah(go_project_extended: Path)-> None:
+def test_receiver(go_project_extended: Path)-> None:
     identifier = "pkg.MyType.Method"
     search_path = str(go_project_extended)
     handler = GoHandler(
@@ -368,3 +496,198 @@ def test_balhblah(go_project_extended: Path)-> None:
         == '    func (m MyType) Method() string {\n        return fmt.Sprintf("ID is %d", m.ID)\n    }\n'
     )
     assert handler._collected[identifier]["relative_path"] == "pkg/helper.go"
+
+
+def test_collect_method_from_fqn_mismatch(go_project_name_mismatch: Path) -> None:
+    identifier = "pkg/utils.MyType.Method"
+    search_path = str(go_project_name_mismatch)
+    handler = GoHandler(
+        base_dir=Path("."),
+        config=GoConfig.from_data(paths=[search_path]),
+        mdx=[],
+        mdx_config={},
+    )
+    handler.collect(identifier, GoOptions())
+    assert handler._collected[identifier] == {
+        "doc": "",
+        "name": "Method",
+        "packageName": "hello",
+        "packageImportPath": str(go_project_name_mismatch / "pkg" / "utils"),
+        "type": "func",
+        "filename": str(go_project_name_mismatch / "pkg" / "utils" / "helper.go"),
+        "line": 11,
+        "parameters": [],
+        "results": [{"type": "string", "name": ""}],
+        "recv": "MyType",
+        "orig": "MyType",
+        "code": 'func (m MyType) Method() string {\n\treturn "hello"\n}\n',
+        "relative_path": "pkg/utils/helper.go",
+    }
+
+
+def test_whole_package_extended(go_project_extended: Path) -> None:
+    identifier = "pkg"
+    search_path = str(go_project_extended)
+    handler = GoHandler(
+        base_dir=Path("."),
+        config=GoConfig.from_data(paths=[search_path]),
+        mdx=[],
+        mdx_config={},
+    )
+    handler.collect(identifier, GoOptions())
+    print(handler._collected[identifier])
+    assert handler._collected[identifier] == {
+        "type": "package",
+        "doc": "package says hello\n",
+        "name": "pkg",
+        "importPath": str(go_project_extended / "pkg"),
+        "imports": ["fmt"],
+        "filenames": [str(go_project_extended / "pkg" / "helper.go")],
+        "notes": {},
+        "bugs": None,
+        "code": None,
+        "relative_path": None,
+        "consts": [
+            {
+                "packageName": "pkg",
+                "packageImportPath": str(go_project_extended / "pkg"),
+                "doc": "Another constant\n",
+                "names": ["Number"],
+                "type": "const",
+                "filename": str(go_project_extended / "pkg" / "helper.go"),
+                "line": 11,
+                "code": "    const Number = 777\n",
+                "relative_path": "pkg/helper.go",
+            },
+            {
+                "packageName": "pkg",
+                "packageImportPath": str(go_project_extended / "pkg"),
+                "doc": "Constant declaration\n",
+                "names": ["Version"],
+                "type": "const",
+                "filename": str(go_project_extended / "pkg" / "helper.go"),
+                "line": 8,
+                "code": '    const Version = "1.0.0"\n',
+                "relative_path": "pkg/helper.go",
+            },
+        ],
+        "types": [
+            {
+                "packageName": "pkg",
+                "packageImportPath": str(go_project_extended / "pkg"),
+                "doc": "Interface declaration\n",
+                "name": "Greeter",
+                "type": "type",
+                "filename": "",
+                "line": 17,
+                "consts": [],
+                "vars": [],
+                "funcs": [],
+                "methods": [],
+                "code": "    type Greeter interface {\n        Greet(name string) string\n    }\n",
+                "relative_path": "pkg/helper.go",
+            },
+            {
+                "packageName": "pkg",
+                "packageImportPath": str(go_project_extended / "pkg"),
+                "doc": "Struct type with a field\n",
+                "name": "MyType",
+                "type": "type",
+                "filename": "",
+                "line": 22,
+                "consts": [],
+                "code": "    type MyType struct {\n        ID int\n    }\n",
+                "vars": [],
+                "funcs": [],
+                "relative_path": "pkg/helper.go",
+                "methods": [
+                    {
+                        "doc": "Function that implements Greeter interface\n",
+                        "name": "Greet",
+                        "packageName": "pkg",
+                        "packageImportPath": str(go_project_extended / "pkg"),
+                        "type": "func",
+                        "filename": str(go_project_extended / "pkg" / "helper.go"),
+                        "line": 37,
+                        "parameters": [{"type": "string", "name": "name"}],
+                        "results": [{"type": "string", "name": ""}],
+                        "recv": "MyType",
+                        "orig": "MyType",
+                        "code": '    func (m MyType) Greet(name string) string {\n        return "Hello, " + name\n    }\n',
+                        "relative_path": "pkg/helper.go",
+                    },
+                    {
+                        "doc": "Method on MyType\n",
+                        "name": "Method",
+                        "packageName": "pkg",
+                        "packageImportPath": str(go_project_extended / "pkg"),
+                        "type": "func",
+                        "filename": str(go_project_extended / "pkg" / "helper.go"),
+                        "line": 27,
+                        "parameters": [],
+                        "results": [{"type": "string", "name": ""}],
+                        "recv": "MyType",
+                        "orig": "MyType",
+                        "code": '    func (m MyType) Method() string {\n        return fmt.Sprintf("ID is %d", m.ID)\n    }\n',
+                        "relative_path": "pkg/helper.go",
+                    },
+                ],
+            },
+            {
+                "packageName": "pkg",
+                "packageImportPath": str(go_project_extended / "pkg"),
+                "doc": "Embedded struct - Person\n",
+                "name": "Person",
+                "type": "type",
+                "filename": "",
+                "line": 42,
+                "consts": [],
+                "vars": [],
+                "funcs": [],
+                "methods": [],
+                "code": "    type Person struct {\n    Name string\n    Address struct {\n        Street string\n        City   string\n    }\n    }\n",
+                "relative_path": "pkg/helper.go",
+            },
+        ],
+        "vars": [
+            {
+                "packageName": "pkg",
+                "packageImportPath": str(go_project_extended / "pkg"),
+                "doc": "Block of variables\n",
+                "names": ["A", "B", "C"],
+                "type": "var",
+                "filename": str(go_project_extended / "pkg" / "helper.go"),
+                "line": 51,
+                "code": '    var (\n    A int\n    B = "text"\n    C float64 = 3.14\n    )\n',
+                "relative_path": "pkg/helper.go",
+            },
+            {
+                "packageName": "pkg",
+                "packageImportPath": str(go_project_extended / "pkg"),
+                "doc": "Variable declaration\n",
+                "names": ["DefaultName"],
+                "type": "var",
+                "filename": str(go_project_extended / "pkg" / "helper.go"),
+                "line": 14,
+                "code": '    var DefaultName = "GoUser"\n',
+                "relative_path": "pkg/helper.go",
+            },
+        ],
+        "funcs": [
+            {
+                "doc": "Function returning a string\n",
+                "name": "Hello",
+                "packageName": "pkg",
+                "packageImportPath": str(go_project_extended / "pkg"),
+                "type": "func",
+                "filename": str(go_project_extended / "pkg" / "helper.go"),
+                "line": 32,
+                "parameters": [],
+                "results": [{"type": "string", "name": ""}],
+                "recv": "",
+                "orig": "",
+                "code": '    func Hello() string {\n        return "hello"\n    }\n',
+                "relative_path": "pkg/helper.go",
+            },
+        ],
+    }
