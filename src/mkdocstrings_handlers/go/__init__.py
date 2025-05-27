@@ -6,7 +6,11 @@ from mkdocstrings_handlers.go._internal.config import (
     GoInputOptions,
     GoOptions,
 )
-from mkdocstrings_handlers.go._internal.handler import GoHandler, find_dicts_with_value, find_line_numbers, get_handler
+from mkdocstrings_handlers.go._internal.handler import (
+    GoHandler,
+    find_dicts_with_value,
+    get_handler,
+)
 from mkdocstrings_handlers.go._internal.rendering import (
     do_format_signature,
     do_format_types,
@@ -23,6 +27,5 @@ __all__ = [
     "do_format_types",
     "do_get_template",
     "find_dicts_with_value",
-    "find_line_numbers",
     "get_handler",
 ]

@@ -146,6 +146,8 @@ class GoHandler(BaseHandler):
         )  # Split into package path and optional object parts
         obj, method = (None, None)
 
+        self._pkg_path = pkg_path
+
         max_fqn_parts = 2  # Maximum parts after the package: Type.Method
         # TODO - only package
         if len(objects) > max_fqn_parts:
@@ -155,7 +157,9 @@ class GoHandler(BaseHandler):
         if len(objects) == max_fqn_parts:
             obj, method = objects  # Method with receiver
         elif not objects:
-            base_dir, obj = identifier.split("/")  # Only a package name is provided
+            base_dir, _, obj = identifier.partition(
+                "/",
+            )  # Only a package name is provided
         else:
             obj = objects[0]  # Single object like a type, constant, or interface
 
@@ -184,18 +188,23 @@ class GoHandler(BaseHandler):
                 raise ValueError("Provided package contains empty file")
 
             data = json.loads(result.stdout)
-            filtered = self._filter_data(data, obj, method)
+            if not obj:
+                filtered = [data]
+            else:
+                filtered = self._filter_data(data, obj, method)
 
             if not filtered:
                 raise ValueError(f"No data found for identifier: '{identifier}'")
 
             self._collected[identifier] = filtered[0]
+            item = self._collected[identifier]
 
-            (
-                self._get_code_snippet_and_path(identifier, pkg_path, method)
-                if method
-                else self._get_code_snippet_and_path(identifier, pkg_path, obj)
+            (code, path) = (
+                self._get_code_snippet_and_path(item, method) if method else self._get_code_snippet_and_path(item, obj)
             )
+
+            self._collected[identifier]["code"] = code
+            self._collected[identifier]["relative_path"] = path
 
             return filtered[0]
 
@@ -211,14 +220,12 @@ class GoHandler(BaseHandler):
         result = find_dicts_with_value(data, "names", obj)
         return result or find_dicts_with_value(data, "name", obj)
 
-    def _get_code_snippet_and_path(self, identifier: str, pkg_path, obj: str) -> None:
-        item = self._collected[identifier]
+    def _get_code_snippet_and_path(self, item: str, obj=None) -> None:
         type_name = item.get("type")
 
         if type_name == "package":
-            item["code"] = None
-            item["relative_path"] = None
-            return
+            inject_code_info(item, self._get_code_snippet_and_path)
+            return None, None
 
         if type_name == "type":
             path, line_nr = find_string_in_go_files(
@@ -226,21 +233,20 @@ class GoHandler(BaseHandler):
                 obj,
                 type_name,
             )
-            # rel_path = find_relative_path(path, item["packageName"])
+            item["line"] = line_nr
+
         else:
             path = item["filename"]
             line_nr = item["line"]
-            # rel_path = find_relative_path(path, pkg_path)
 
         with open(path) as f:
             lines = f.readlines()
 
         block = extract_go_block(lines, start_line=line_nr, block_type=type_name)
 
-        index = path.find(pkg_path)
-        rel_path = path[index:]
-        item["code"] = "".join(block)
-        item["relative_path"] = rel_path
+        code = "".join(block)
+        rel_path = get_rel_path(self._pkg_path, path) if path is not None else None
+        return code, rel_path
 
     def render(self, data: CollectorItem, options: GoOptions) -> str:
         """Render a template using provided data and configuration options."""
@@ -332,19 +338,7 @@ def find_dicts_with_value(obj: dict, target_key: str, target_value: str) -> list
     return results
 
 
-def find_line_numbers(file_path, search_string):
-    with open(file_path) as file:
-        for i, line in enumerate(file, 1):
-            stripped = line.strip()
-            splitted = line.split(" ")
-            if search_string in splitted and not stripped.startswith("//"):
-                return i
-    return None
-
-
-# TODO optimize use lines and filename when possible
 def find_string_in_go_files(search_dir, search_string, type):
-    results = []
     for root, _, files in os.walk(search_dir):
         for file in files:
             if file.endswith(".go"):
@@ -352,7 +346,6 @@ def find_string_in_go_files(search_dir, search_string, type):
                 with open(filepath, encoding="utf-8", errors="ignore") as f:
                     for i, line in enumerate(f, start=1):
                         stripped = line.strip()
-                        # splitted = line.split(" ")
                         if search_string in stripped and not stripped.startswith("//"):
                             return (filepath, i)
     return None
@@ -381,6 +374,8 @@ def extract_go_block(lines, start_line, block_type):
                 found_start = True
                 depth += line.count(opener) - line.count(closer)
             block.append(line)
+            if closer in line:
+                break
         else:
             block.append(line)
             depth += line.count(opener) - line.count(closer)
@@ -388,3 +383,26 @@ def extract_go_block(lines, start_line, block_type):
                 break
 
     return block
+
+
+def inject_code_info(obj, find_code_fn):
+    if isinstance(obj, dict):
+        if obj.get("type") in {"func", "const", "var"}:
+            code, rel_path = find_code_fn(obj)
+            obj["code"] = code
+            obj["relative_path"] = rel_path
+        elif obj.get("type") == "type":
+            obj_to_find = obj.get("name")
+            code, rel_path = find_code_fn(obj, obj_to_find)
+            obj["code"] = code
+            obj["relative_path"] = rel_path
+        for value in obj.values():
+            inject_code_info(value, find_code_fn)
+    elif isinstance(obj, list):
+        for item in obj:
+            inject_code_info(item, find_code_fn)
+
+
+def get_rel_path(pkg_path, path):
+    index = path.find(pkg_path)
+    return path[index:]
