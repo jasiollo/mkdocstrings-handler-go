@@ -114,6 +114,31 @@ class GoInputOptions:
         ),
     ] = True
 
+    show_root_struct: Annotated[
+        bool,
+        _Field(
+            group="general",
+            description="Show structs and interfaces if they are root of collected objects.",
+        ),
+    ] = True
+
+    show_source: Annotated[
+        bool,
+        _Field(
+            group="general",
+            description="Show the source code of this object.",
+        ),
+    ] = True
+
+    format_code: Annotated[
+        bool,
+        _Field(
+            group="general",
+            description="Show the source code of this object.",
+        ),
+    ] = False
+
+
     heading: Annotated[
         str,
         _Field(

@@ -85,7 +85,7 @@ Context:
         {# skipping overloads for now #}
         {# separate signature by default #}
         {% filter format_signature(data, config.line_length) %}
-          {{ data.name }}
+          func {{ data.name }}
         {% endfilter %}
       {% endblock %}
       <div class="doc doc-contents {% if root %}first{% endif %}">
@@ -99,8 +99,26 @@ Context:
         {% block dockstring scoped %}
           {{ data.doc }}
           {# TODO: make docstring template - based on actual docstring standard #}
-        {% endblock %}
-      {% endblock %}
+        {% endblock dockstring %}
+
+        {% block source scoped %}
+          {#- Source block.
+
+          This block renders the source code for the function.
+          -#}
+          {% if config.show_source and data.code != "" %}
+            <details class="quote">
+            {%- if data.relative_path -%}
+              <summary>"Source code in"<code>
+              {{ data.relative_path }}
+              </code></summary>
+            {%- endif -%}
+                {{ data.code|format_code(config.line_length, config.format_code)|highlight(language="go", linestart=data.lineno or 0, linenums=True) }}
+            </details>
+            {% endif %}
+        {% endblock source %}
+      {{ config.format_code }}
+      {% endblock contents%}
       </div>
     {%endif%}
   {% endwith %}

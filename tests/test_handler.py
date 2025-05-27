@@ -397,7 +397,6 @@ def test_collect_const_from_fqname(go_project_extended: Path) -> None:
         "type": "const",
         "filename": str(go_project_extended / "pkg" / "helper.go"),
         "line": 11,
-        "code": "    type Greeter interface {\n        Greet(name string) string\n    }\n",
         "relative_path": "pkg/helper.go",
         "code": "    const Number = 777\n",
     }
@@ -432,7 +431,7 @@ def test_collect_wrong_fqname(go_project_extended: Path) -> None:
         handler.collect(identifier, GoOptions())
 
 
-def test_interface(go_project_extended: Path):
+def test_interface(go_project_extended: Path) -> None:
     identifier = "pkg.Greeter"
     search_path = str(go_project_extended)
     handler = GoHandler(
@@ -449,7 +448,7 @@ def test_interface(go_project_extended: Path):
     assert handler._collected[identifier]["relative_path"] == "pkg/helper.go"
 
 
-def test_nested_struct(go_project_extended: Path):
+def test_nested_struct(go_project_extended: Path) -> None:
     identifier = "pkg.Person"
     search_path = str(go_project_extended)
     handler = GoHandler(
@@ -466,7 +465,7 @@ def test_nested_struct(go_project_extended: Path):
     assert handler._collected[identifier]["relative_path"] == "pkg/helper.go"
 
 
-def test_multiple_var(go_project_extended: Path):
+def test_multiple_var(go_project_extended: Path) -> None:
     identifier = "pkg.C"
     search_path = str(go_project_extended)
     handler = GoHandler(
@@ -482,7 +481,7 @@ def test_multiple_var(go_project_extended: Path):
     assert handler._collected[identifier]["relative_path"] == "pkg/helper.go"
 
 
-def test_receiver(go_project_extended: Path):
+def test_receiver(go_project_extended: Path)-> None:
     identifier = "pkg.MyType.Method"
     search_path = str(go_project_extended)
     handler = GoHandler(

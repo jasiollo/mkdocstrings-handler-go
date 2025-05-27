@@ -1,3 +1,6 @@
+import subprocess
+from os.path import expanduser, isfile
+
 from jinja2 import Environment, Template, TemplateNotFound, pass_context, pass_environment
 from jinja2.runtime import Context
 from markupsafe import Markup
@@ -28,18 +31,47 @@ def _format_signature(name: Markup, signature: str, line_length: int) -> str:
     if len(name + signature) < line_length:
         return name + signature
 
-    # TODO: add _get_formatter()
-    # and call it in similar way as in python handler
-    # https://go.dev/blog/gofmt
+    # try to use golines formatter if installed
+    full = name + signature
+    if(isfile(expanduser("~/go/bin/golines"))):
+        formatted = subprocess.run( # noqa: S603
+            [expanduser("~/go/bin/golines"), f"--max-len={line_length}"],
+            input = full,
+            capture_output=True,
+            text= True, check=False,
+        )
+        if formatted.stdout != "":
+            return formatted.stdout
 
-    # very temporary solution
-    return name + "\n" + signature
+    # try to manualy format
+    code = name + signature
+    code = code.replace("(", "\n(\n")
+    code = code.replace(")", "\n)\n")
+    return code.replace(", ", ",\n")
 
 
 def _format_type_signature(name: Markup, signature: str, line_length: int) -> str:
-    signature = signature.strip()
-    return signature
+    return signature.strip()
 
+
+def do_format_code(
+    code: str,
+    line_length: int,
+    format_code: bool,
+) -> str:
+    """Format source code block."""
+    if not format_code or not isfile(expanduser("~/go/bin/golines")):
+        return code
+    formatted = subprocess.run( # noqa: S603
+            [expanduser("~/go/bin/golines"), f"--max-len={line_length}"],
+            input = code,
+            capture_output=True,
+            text= True, check=False,
+        )
+    if formatted.stdout !="":
+        return formatted.stdout
+    # golines failed - no format
+    return code
 
 @pass_context
 def do_format_signature(
@@ -150,19 +182,12 @@ def do_format_const_signature(
     )
 
 
-
 _TEMPLATE_MAP = {
     "func": "function.html.jinja",
     "type": "struct.html.jinja",
     "package": "package.html.jinja",
     "const": "const.html.jinja",
 }
-
-
-
-
-
-
 
 
 @pass_environment
