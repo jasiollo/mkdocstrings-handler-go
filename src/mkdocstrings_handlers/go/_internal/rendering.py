@@ -1,9 +1,10 @@
+import subprocess
+from os.path import expanduser, isfile
+
 from jinja2 import Environment, Template, TemplateNotFound, pass_context, pass_environment
 from jinja2.runtime import Context
-from os.path import expanduser, isfile
 from markupsafe import Markup
 from mkdocstrings import get_logger
-import subprocess
 
 _logger = get_logger(__name__)
 
@@ -30,16 +31,14 @@ def _format_signature(name: Markup, signature: str, line_length: int) -> str:
     if len(name + signature) < line_length:
         return name + signature
 
-    print("\n\n-----TOO LONG-----\n\n")
     # try to use golines formatter if installed
     full = name + signature
-    print(full)
     if(isfile(expanduser("~/go/bin/golines"))):
-        formatted = subprocess.run(
+        formatted = subprocess.run( # noqa: S603
             [expanduser("~/go/bin/golines"), f"--max-len={line_length}"],
             input = full,
             capture_output=True,
-            text= True,
+            text= True, check=False,
         )
         if formatted.stdout != "":
             return formatted.stdout
@@ -48,13 +47,11 @@ def _format_signature(name: Markup, signature: str, line_length: int) -> str:
     code = name + signature
     code = code.replace("(", "\n(\n")
     code = code.replace(")", "\n)\n")
-    code = code.replace(", ", ",\n")
-    return code
+    return code.replace(", ", ",\n")
 
 
 def _format_type_signature(name: Markup, signature: str, line_length: int) -> str:
-    signature = signature.strip()
-    return signature
+    return signature.strip()
 
 
 def do_format_code(
@@ -62,22 +59,17 @@ def do_format_code(
     line_length: int,
     format_code: bool,
 ) -> str:
-    """
-    Format source code block
-    """
+    """Format source code block."""
     if not format_code or not isfile(expanduser("~/go/bin/golines")):
         return code
-    print("\n\n-----FORMAT CODE-----\n\n")
-    formatted = subprocess.run(
+    formatted = subprocess.run( # noqa: S603
             [expanduser("~/go/bin/golines"), f"--max-len={line_length}"],
             input = code,
             capture_output=True,
-            text= True,
+            text= True, check=False,
         )
     if formatted.stdout !="":
         return formatted.stdout
-    print("golines failed")
-    print(formatted)
     # golines failed - no format
     return code
 
