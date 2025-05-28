@@ -33,14 +33,26 @@ You can install it by running:
 go install github.com/rtfd/godocjson@latest
 ```
 
-### Add .md files containing paths to .go files to include in documentation:
+### Add .md files containing identifiers to include in documentation:
+#### Package
 ```
-# reference
+::: hello/main
+```
+#### Function
+```
+::: hello.Hello
+```
+#### Struct
+```
+::: hello.Person
+```
 
-::: /home/flopper/zprp-go/hello/hello.go
+### Displayed source code is formatted if golines formatter is available
+```
+go install github.com/segmentio/golines@latest
 ```
 
 ### Serve documentation
 ```
-mkdoc serve
+mkdocs serve
 ```
