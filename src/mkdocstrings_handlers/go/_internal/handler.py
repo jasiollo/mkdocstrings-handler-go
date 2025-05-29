@@ -9,13 +9,20 @@ import subprocess
 import sys
 from os.path import expanduser
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, ClassVar
+from typing import TYPE_CHECKING, Any, ClassVar, Optional
 
 from mkdocs.exceptions import PluginError
 from mkdocstrings import BaseHandler, CollectorItem, get_logger
 
 from mkdocstrings_handlers.go._internal import rendering
 from mkdocstrings_handlers.go._internal.config import GoConfig, GoOptions
+from mkdocstrings_handlers.go._internal.helpers import (
+    _extract_go_block,
+    _find_dicts_with_value,
+    _find_string_in_go_files,
+    _get_rel_path,
+    _inject_code_info,
+)
 
 if TYPE_CHECKING:
     from collections.abc import Iterator, Mapping, MutableMapping
@@ -132,134 +139,53 @@ class GoHandler(BaseHandler):
             raise PluginError(f"Invalid options: {error}") from error
 
     def collect(self, identifier: str, options: GoOptions) -> CollectorItem:
-        """Collect documentation data for a given Go identifier (package, type, or method)."""
+        """Collect the documentation for the given identifier.
+
+        Parameters:
+            identifier: The identifier of the object to collect.
+            options: The options to use for the collection.
+
+        Returns:
+            The collected item.
+        """
         if not identifier:
-            raise AttributeError("Identifier cannot be empty!")
+            raise ValueError("Identifier cannot be empty!")
 
-        # check for options
-        if options == {}:
-            options = self.get_options({})
+        opts = options or self.get_options({})
 
-        # Example identifier: mymod/pkg/utils.Type.Method
-        pkg_path, *objects = identifier.split(
-            ".",
-        )  # Split into package path and optional object parts
-        obj, method = (None, None)
-
+        pkg_path, obj, method, base_dir = self._parse_identifier(identifier)
         self._pkg_path = pkg_path
 
-        max_fqn_parts = 2  # Maximum parts after the package: Type.Method
-        # TODO - only package
-        if len(objects) > max_fqn_parts:
-            raise ValueError(
-                f"Invalid FQN: '{identifier}'. Max format: 'package.Type.Method'",
-            )
-        if len(objects) == max_fqn_parts:
-            obj, method = objects  # Method with receiver
-        elif not objects:
-            base_dir, _, obj = identifier.partition(
-                "/",
-            )  # Only a package name is provided
+        valid_path = self._resolve_valid_path(pkg_path, base_dir)
+        raw_data = self._run_godocjson(valid_path)
+
+        if not obj:
+            filtered = [raw_data]
         else:
-            obj = objects[0]  # Single object like a type, constant, or interface
+            filtered = self._filter_data(raw_data, obj, method)
 
-        valid_path = next(
-            (Path(base) / pkg_path for base in self._paths if (Path(base) / pkg_path).is_dir()),
-            None,
-        )
-        if not valid_path:
-            valid_path = next(
-                (Path(base) / base_dir for base in self._paths if (Path(base) / base_dir).is_dir()),
-                None,
-            )
-            if not valid_path:
-                raise FileNotFoundError(
-                    f"No valid package path found for '{pkg_path} or {base_dir}'\n with paths {self._paths}\n ",
-                )
+        if not filtered:
+            raise ValueError(f"No data found for identifier: '{identifier}'")
 
-        try:
-            result = subprocess.run(  # noqa: S603
-                [expanduser(self.godocjson_path), valid_path],
-                check=True,
-                capture_output=True,
-                text=True,
-            )
-            if not result.stdout:
-                raise ValueError("Provided package contains empty file")
+        item = filtered[0]
+        self._collected[identifier] = item
 
-            data = json.loads(result.stdout)
-            if not obj:
-                filtered = [data]
-            else:
-                filtered = self._filter_data(data, obj, method)
+        code, path = self._get_code_snippet_and_path(item, method or obj)
+        item["code"] = code
+        item["relative_path"] = path
 
-            if not filtered:
-                raise ValueError(f"No data found for identifier: '{identifier}'")
-
-            self._collected[identifier] = filtered[0]
-            item = self._collected[identifier]
-
-            (code, path) = (
-                self._get_code_snippet_and_path(item, method) if method else self._get_code_snippet_and_path(item, obj)
-            )
-
-            self._collected[identifier]["code"] = code
-            self._collected[identifier]["relative_path"] = path
-
-            return filtered[0]
-
-        except subprocess.CalledProcessError as e:
-            raise RuntimeError(f"godocjson failed:\n{e.stderr.strip()}") from e
-
-    def _filter_data(self, data: dict, obj: str, method: str | None) -> list:
-        if method:
-            # Search by receiver type, then method name
-            data = find_dicts_with_value(data, "name", obj)  # type: ignore [assignment]
-            return find_dicts_with_value(data, "name", method)
-        # Try looking by 'names' (constants, vars), fallback to 'name' (types, interfaces)
-        result = find_dicts_with_value(data, "names", obj)
-        return result or find_dicts_with_value(data, "name", obj)
-
-    def _get_code_snippet_and_path(self, item: str, obj=None) -> None:
-        type_name = item.get("type")
-
-        if type_name == "package":
-            inject_code_info(item, self._get_code_snippet_and_path)
-            return None, None
-
-        if type_name == "type":
-            path, line_nr = find_string_in_go_files(
-                item["packageImportPath"],
-                obj,
-                type_name,
-            )
-            item["line"] = line_nr
-
-        else:
-            path = item.get("filename")
-            if path is None:
-                raise ValueError(f"Field path not found for function\n Perhaps you mistyped package name?")
-            line_nr = item["line"]
-
-        with open(path) as f:
-            lines = f.readlines()
-
-        block = extract_go_block(lines, start_line=line_nr, block_type=type_name)
-
-        code = "".join(block)
-        rel_path = get_rel_path(self._pkg_path, path) if path is not None else None
-        return code, rel_path
+        return item
 
     def render(self, data: CollectorItem, options: GoOptions) -> str:
-        """Render a template using provided data and configuration options."""
-        # The `data` argument is the data to render, that was collected above in `collect()`.
-        # The `options` argument is the configuration options for loading/rendering the data.
-        # It contains both the global and local options, combined together.
+        """Render the documentation using a Jinja template.
 
-        # You might want to get the template based on the data type.
+        Parameters:
+            data: The collected documentation data.
+            options: The rendering options including heading levels and configuration.
 
-        # template = self.env.get_template(data)
-
+        Returns:
+            The rendered documentation as a string.
+        """
         template = rendering.do_get_template(self.env, data)
 
         # All the following variables will be available in the Jinja templates.
@@ -271,7 +197,14 @@ class GoHandler(BaseHandler):
         )
 
     def get_aliases(self, identifier: str) -> tuple[str, ...]:
-        """Get aliases for a given identifier."""
+        """Get aliases for the given identifier.
+
+        Parameters:
+            identifier: The identifier to retrieve aliases for.
+
+        Returns:
+            A tuple containing the identifier's name or an empty tuple if not found.
+        """
         try:
             data = self._collected[identifier]
         except KeyError:
@@ -297,10 +230,174 @@ class GoHandler(BaseHandler):
         self.env.filters["format_const_signature"] = rendering.do_format_const_signature
         self.env.filters["format_code"] = rendering.do_format_code
 
+    def _parse_identifier(
+        self,
+        identifier: str,
+    ) -> tuple[str, Optional[str], Optional[str], Optional[str]]:
+        """Parse the identifier into components.
 
-    # You can also implement the `get_inventory_urls` and `load_inventory` methods
-    # if you want to support loading object inventories.
-    # You can also implement the `render_backlinks` method if you want to support backlinks.
+        Parameters:
+            identifier: The full identifier string (e.g., 'pkg.Type.Method').
+
+        Returns:
+            A tuple of (pkg_path, object name, method name, base_dir).
+        """
+        pkg_path, *objects = identifier.split(".")
+        obj = method = None
+        base_dir = None  # Not used anymore in path logic
+
+        if len(objects) > 2:
+            raise ValueError(
+                f"Invalid FQN: '{identifier}'. Max format: 'package.Type.Method'",
+            )
+        if len(objects) == 2:
+            obj, method = objects
+        elif len(objects) == 1:
+            obj = objects[0]
+
+        return pkg_path, obj, method, base_dir
+
+    def _resolve_valid_path(self, pkg_path: str, _: Optional[str] = None) -> Path:
+        """Resolve the valid Go package path based on configured search paths.
+
+        Parameters:
+            pkg_path: The Go package path to search for.
+            _: Optional base directory (currently unused).
+
+        Returns:
+            The resolved package path as a Path object.
+
+        Raises:
+            FileNotFoundError: If the path could not be resolved.
+        """
+        for base in self._paths:
+            candidate = Path(base) / pkg_path
+            if candidate.is_dir():
+                return candidate
+
+        raise FileNotFoundError(
+            f"No valid package path found for '{pkg_path}'\nPaths tried: {self._paths}",
+        )
+
+    def _run_godocjson(self, valid_path: Path) -> dict:
+        """Run the godocjson command and return parsed JSON output.
+
+        Parameters:
+            valid_path: The valid package path to pass to godocjson.
+
+        Returns:
+            The parsed JSON documentation data.
+
+        Raises:
+            RuntimeError: If the subprocess call fails.
+            ValueError: If the resulting output is empty.
+        """
+        try:
+            result = subprocess.run(  # noqa: S603
+                [expanduser(self.godocjson_path), valid_path],
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+            if not result.stdout:
+                raise ValueError("Provided package contains empty file")
+
+            return json.loads(result.stdout)
+
+        except subprocess.CalledProcessError as e:
+            raise RuntimeError(f"godocjson failed:\n{e.stderr.strip()}") from e
+
+    def _filter_data(self, data: dict, obj: str, method: str | None) -> list:
+        """Filter the documentation data for a specific object or method.
+
+        Parameters:
+            data: The raw godocjson documentation data.
+            obj: The object name to filter for (e.g., a type or constant).
+            method: Optional method name to further narrow the result.
+
+        Returns:
+            A list of matching documentation dictionaries.
+        """
+        if method:
+            # First find the type (receiver), then the method
+            type_matches = _find_dicts_with_value(data, "name", obj)
+            return _find_dicts_with_value(type_matches, "name", method)
+
+        # Try to match constants/vars by 'names'; fall back to 'name' for types, interfaces
+        by_names = _find_dicts_with_value(data, "names", obj)
+        return by_names or _find_dicts_with_value(data, "name", obj)
+
+    def _get_code_snippet_and_path(
+        self,
+        item: dict,
+        obj: str | None = None,
+    ) -> tuple[str | None, str | None]:
+        """Extract the Go code block and source path for a given item.
+
+        Parameters:
+            item: The documentation item dictionary.
+            obj: Optional name of the object to locate in the source.
+
+        Returns:
+            A tuple of (code block as a string, relative path to source file).
+        """
+        type_name = item.get("type")
+
+        if type_name == "package":
+            # Package-level injection (possibly modifies the item in-place)
+            _inject_code_info(item, self._get_code_snippet_and_path)
+            return None, None
+
+        # Determine source path and line number
+        path, line_nr = self._resolve_code_location(item, obj, type_name)
+        item["line"] = line_nr
+
+        # Extract and return code snippet
+        try:
+            with open(path) as f:
+                lines = f.readlines()
+        except FileNotFoundError:
+            raise FileNotFoundError(f"Source file not found at: {path}")
+
+        block = _extract_go_block(lines, start_line=line_nr, block_type=type_name)
+        code = "".join(block)
+        rel_path = _get_rel_path(self._pkg_path, path) if path else None
+
+        return code, rel_path
+
+    def _resolve_code_location(
+        self,
+        item: dict,
+        obj: str | None,
+        type_name: str,
+    ) -> tuple[str, int]:
+        """Find the file path and line number for the given Go object.
+
+        Parameters:
+            item: The documentation item dictionary.
+            obj: The name of the object (used for types).
+            type_name: The kind of object (e.g., 'type', 'func').
+
+        Returns:
+            A tuple containing the source file path and the line number.
+
+        Raises:
+            ValueError: If the required fields are missing in the item.
+        """
+        if type_name == "type":
+            return _find_string_in_go_files(item["packageImportPath"], obj, type_name)
+
+        path = item.get("filename")
+        if not path:
+            raise ValueError(
+                "Field 'filename' not found. Possibly incorrect package name?",
+            )
+
+        line_nr = item.get("line")
+        if line_nr is None:
+            raise ValueError("Line number missing in item.")
+
+        return path, line_nr
 
 
 def get_handler(
@@ -323,92 +420,3 @@ def get_handler(
         base_dir=base_dir,
         **kwargs,
     )
-
-
-def find_dicts_with_value(obj: dict, target_key: str, target_value: str) -> list:
-    results = []
-    if isinstance(obj, dict):
-        # Check if the current dict has the key and value
-        if target_key in obj:
-            if obj[target_key] == target_value:
-                results.append(obj)
-            elif isinstance(obj[target_key], list):
-                results.extend(obj for elem in obj[target_key] if elem == target_value)
-        # Recursively search in each value
-        for value in obj.values():
-            results.extend(find_dicts_with_value(value, target_key, target_value))
-    elif isinstance(obj, list):
-        # If it's a list, search each item
-        for item in obj:
-            results.extend(find_dicts_with_value(item, target_key, target_value))
-    return results
-
-
-def find_string_in_go_files(search_dir, search_string, type):
-    for root, _, files in os.walk(search_dir):
-        for file in files:
-            if file.endswith(".go"):
-                filepath = os.path.join(root, file)
-                with open(filepath, encoding="utf-8", errors="ignore") as f:
-                    for i, line in enumerate(f, start=1):
-                        stripped = line.strip()
-                        if search_string in stripped and not stripped.startswith("//"):
-                            return (filepath, i)
-    return None
-
-
-def extract_go_block(lines, start_line, block_type):
-    start_line -= 1  # Convert to 0-based index
-    block = []
-
-    if block_type in ["func", "type"]:
-        opener, closer = "{", "}"
-    elif block_type in ["const", "var"]:
-        if lines[start_line].strip().startswith("const (") or lines[start_line].strip().startswith("var ("):
-            opener, closer = "(", ")"
-        else:
-            return [lines[start_line]]  # single-line const
-    else:
-        return []
-
-    depth = 0
-    found_start = False
-
-    for line in lines[start_line:]:
-        if not found_start:
-            if opener in line:
-                found_start = True
-                depth += line.count(opener) - line.count(closer)
-            block.append(line)
-            if closer in line:
-                break
-        else:
-            block.append(line)
-            depth += line.count(opener) - line.count(closer)
-            if depth == 0:
-                break
-
-    return block
-
-
-def inject_code_info(obj, find_code_fn):
-    if isinstance(obj, dict):
-        if obj.get("type") in {"func", "const", "var"}:
-            code, rel_path = find_code_fn(obj)
-            obj["code"] = code
-            obj["relative_path"] = rel_path
-        elif obj.get("type") == "type":
-            obj_to_find = obj.get("name")
-            code, rel_path = find_code_fn(obj, obj_to_find)
-            obj["code"] = code
-            obj["relative_path"] = rel_path
-        for value in obj.values():
-            inject_code_info(value, find_code_fn)
-    elif isinstance(obj, list):
-        for item in obj:
-            inject_code_info(item, find_code_fn)
-
-
-def get_rel_path(pkg_path, path):
-    index = path.find(pkg_path)
-    return path[index:]
