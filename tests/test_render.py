@@ -9,7 +9,6 @@ def normalize_html(html: str) -> str:
     return "".join(lines)
 
 
-# obsolete with root=true in render
 def test_render_function(handler: handler.GoHandler) -> None:
     res = handler.render(
         {
@@ -24,6 +23,8 @@ def test_render_function(handler: handler.GoHandler) -> None:
             "results": [{"type": "int", "name": ""}],
             "recv": "",
             "orig": "",
+            "code": "",
+            "relative_path": "",
         },
         config.GoOptions(show_symbol_type_heading=True, show_root_heading=True, show_root_full_path=False),
     )
@@ -35,10 +36,11 @@ def test_render_function(handler: handler.GoHandler) -> None:
                 <div class="doc-signature highlight">
                     <pre>
                     <span></span>
-                        <code>
+                    <code>
+                        <span class="kd">func</span>
+                        <span class="w"></span>
                         <span class="nx">Foo</span>
                         <span class="p">(</span>
-                        <span class="w"></span>
                         <span class="nx">b</span>
                         <span class="w"></span>
                         <span class="kt">int</span>
@@ -49,7 +51,9 @@ def test_render_function(handler: handler.GoHandler) -> None:
                         <span class="kt">int</span>
                         <span class="p">)</span>
                         <span class="w"></span>
-                        <span class="kt">int</span>\n
+                        <span class="p">(</span>
+                        <span class="kt">int</span>
+                        <span class="p">)</span>
                         </code>
                     </pre>
                 </div>
@@ -92,6 +96,8 @@ def test_render_package(handler: handler.GoHandler) -> None:
                 "results": [{"type": "int", "name": ""}],
                 "recv": "",
                 "orig": "",
+                "code": "",
+                "relative_path": "",
             },
         ],
     }
@@ -114,9 +120,10 @@ def test_render_package(handler: handler.GoHandler) -> None:
                     <pre>
                     <span></span>
                         <code>
+                        <span class="kd">func</span>
+                        <span class="w"></span>
                         <span class="nx">Foo</span>
                         <span class="p">(</span>
-                        <span class="w"></span>
                         <span class="nx">b</span>
                         <span class="w"></span>
                         <span class="kt">int</span>
@@ -127,7 +134,9 @@ def test_render_package(handler: handler.GoHandler) -> None:
                         <span class="kt">int</span>
                         <span class="p">)</span>
                         <span class="w"></span>
-                        <span class="kt">int</span>\n
+                        <span class="p">(</span>
+                        <span class="kt">int</span>
+                        <span class="p">)</span>
                         </code>
                     </pre>
                 </div>
@@ -174,6 +183,8 @@ def test_render_struct(handler : handler.GoHandler) -> None:
       "vars": [],
       "funcs": [],
       "methods": [],
+        "code": "",
+        "relative_path": "",
     },
   ],
   "vars": [],
@@ -262,7 +273,3 @@ def test_render_const(handler : handler.GoHandler) -> None:
    </div>
 </div>"""
     assert normalize_html(res) == normalize_html(html)
-
-
-
-
