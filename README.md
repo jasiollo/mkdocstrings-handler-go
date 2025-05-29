@@ -34,9 +34,9 @@ go install github.com/rtfd/godocjson@latest
 ```
 
 ### Add .md files containing identifiers to include in documentation:
-#### Package
+#### Folder Contents
 ```
-::: hello/main
+::: hello
 ```
 #### Function
 ```
