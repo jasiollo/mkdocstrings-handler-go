@@ -186,7 +186,7 @@ def go_project_extended(tmp_path: str) -> str:
 
 
 def test_empty_id(handler: GoHandler) -> None:
-    with pytest.raises(AttributeError):
+    with pytest.raises(ValueError):
         handler.collect("", GoOptions())
 
 
@@ -481,7 +481,7 @@ def test_multiple_var(go_project_extended: Path) -> None:
     assert handler._collected[identifier]["relative_path"] == "pkg/helper.go"
 
 
-def test_receiver(go_project_extended: Path)-> None:
+def test_receiver(go_project_extended: Path) -> None:
     identifier = "pkg.MyType.Method"
     search_path = str(go_project_extended)
     handler = GoHandler(

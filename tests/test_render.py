@@ -156,41 +156,37 @@ def test_render_package(handler: handler.GoHandler) -> None:
     assert res == expected
 
 
-
-def test_render_struct(handler : handler.GoHandler) -> None:
+def test_render_struct(handler: handler.GoHandler) -> None:
     data_json = {
-  "type": "package",
-  "doc": "package says hello\n",
-  "name": "utils",
-  "importPath": ".",
-  "imports": [],
-  "filenames": [
-    "handler.go",
-  ],
-  "notes": {},
-  "bugs": "null",
-  "consts": [],
-  "types": [
-    {
-      "packageName": "utils",
-      "packageImportPath": ".",
-      "doc": "Struct type with a field\n",
-      "name": "MyType",
-      "type": "type",
-      "filename": "",
-      "line": 0,
-      "consts": [],
-      "vars": [],
-      "funcs": [],
-      "methods": [],
-        "code": "",
-        "relative_path": "",
-    },
-  ],
-  "vars": [],
-  "funcs": [],
-}
-
+        "type": "package",
+        "doc": "package says hello\n",
+        "name": "utils",
+        "importPath": ".",
+        "imports": [],
+        "filenames": [
+            "handler.go",
+        ],
+        "notes": {},
+        "bugs": "null",
+        "consts": [],
+        "types": [
+            {
+                "packageName": "utils",
+                "packageImportPath": ".",
+                "doc": "Struct type with a field\n",
+                "name": "MyType",
+                "type": "type",
+                "filename": "",
+                "line": 0,
+                "consts": [],
+                "vars": [],
+                "funcs": [],
+                "methods": [],
+            },
+        ],
+        "vars": [],
+        "funcs": [],
+    }
 
     html = handler.render(data_json, config.GoOptions(show_symbol_type_heading=True, show_root_heading=True))
 
@@ -218,36 +214,35 @@ def test_render_struct(handler : handler.GoHandler) -> None:
     assert normalize_html(html) == normalize_html(res)
 
 
-
-def test_render_const(handler : handler.GoHandler) -> None:
+def test_render_const(handler: handler.GoHandler) -> None:
     data_json = {
-  "type": "package",
-  "doc": "package says hello\n",
-  "name": "utils",
-  "importPath": "test_folder",
-  "imports": [],
-  "filenames": [
-    "test_folder/hander.go",
-  ],
-  "notes": {},
-  "bugs": "null",
-  "consts": [
-    {
-      "packageName": "utils",
-      "packageImportPath": "test_folder",
-      "doc": "Another constant\n",
-      "names": [
-        "Number",
-      ],
-      "type": "const",
-      "filename": "test_folder/hander.go",
-      "line": 5,
-    },
-  ],
-  "types": [],
-  "vars": [],
-  "funcs": [],
-}
+        "type": "package",
+        "doc": "package says hello\n",
+        "name": "utils",
+        "importPath": "test_folder",
+        "imports": [],
+        "filenames": [
+            "test_folder/hander.go",
+        ],
+        "notes": {},
+        "bugs": "null",
+        "consts": [
+            {
+                "packageName": "utils",
+                "packageImportPath": "test_folder",
+                "doc": "Another constant\n",
+                "names": [
+                    "Number",
+                ],
+                "type": "const",
+                "filename": "test_folder/hander.go",
+                "line": 5,
+            },
+        ],
+        "types": [],
+        "vars": [],
+        "funcs": [],
+    }
 
     html = handler.render(data_json, config.GoOptions(show_symbol_type_heading=True, show_root_heading=True))
 

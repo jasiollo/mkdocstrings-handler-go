@@ -33,12 +33,13 @@ def _format_signature(name: Markup, signature: str, line_length: int) -> str:
 
     # try to use golines formatter if installed
     full = name + signature
-    if(isfile(expanduser("~/go/bin/golines"))):
-        formatted = subprocess.run( # noqa: S603
+    if isfile(expanduser("~/go/bin/golines")):
+        formatted = subprocess.run(  # noqa: S603
             [expanduser("~/go/bin/golines"), f"--max-len={line_length}"],
-            input = full,
+            input=full,
             capture_output=True,
-            text= True, check=False,
+            text=True,
+            check=False,
         )
         if formatted.stdout != "":
             return formatted.stdout
@@ -75,16 +76,18 @@ def do_format_code(
     """
     if not format_code or not isfile(expanduser("~/go/bin/golines")):
         return code
-    formatted = subprocess.run( # noqa: S603
-            [expanduser("~/go/bin/golines"), f"--max-len={line_length}"],
-            input = code,
-            capture_output=True,
-            text= True, check=False,
-        )
-    if formatted.stdout !="":
+    formatted = subprocess.run(  # noqa: S603
+        [expanduser("~/go/bin/golines"), f"--max-len={line_length}"],
+        input=code,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if formatted.stdout != "":
         return formatted.stdout
     # golines failed - no format
     return code
+
 
 @pass_context
 def do_format_signature(

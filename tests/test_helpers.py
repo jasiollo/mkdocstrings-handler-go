@@ -1,7 +1,7 @@
 import pytest
 
 from mkdocstrings_handlers.go._internal.handler import (
-    find_dicts_with_value,
+    _find_dicts_with_value,
 )
 
 data = {
@@ -69,11 +69,11 @@ def example_data() -> dict:
 
 
 def test_name_search(example_data: dict) -> None:
-    assert find_dicts_with_value(example_data, "name", "Hello") == [
+    assert _find_dicts_with_value(example_data, "name", "Hello") == [
         {"doc": "Function returning a string\n", "name": "Hello"},
     ]
 
-    assert find_dicts_with_value(example_data, "names", "Number") == [
+    assert _find_dicts_with_value(example_data, "names", "Number") == [
         {
             "packageName": "pkg",
             "doc": "Constant declaration\n",
