@@ -138,7 +138,6 @@ class GoInputOptions:
         ),
     ] = False
 
-
     heading: Annotated[
         str,
         _Field(

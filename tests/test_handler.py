@@ -186,7 +186,7 @@ def go_project_extended(tmp_path: str) -> str:
 
 
 def test_empty_id(handler: GoHandler) -> None:
-    with pytest.raises(AttributeError):
+    with pytest.raises(ValueError, match="Identifier cannot be empty!"):
         handler.collect("", GoOptions())
 
 
@@ -481,7 +481,7 @@ def test_multiple_var(go_project_extended: Path) -> None:
     assert handler._collected[identifier]["relative_path"] == "pkg/helper.go"
 
 
-def test_receiver(go_project_extended: Path)-> None:
+def test_receiver(go_project_extended: Path) -> None:
     identifier = "pkg.MyType.Method"
     search_path = str(go_project_extended)
     handler = GoHandler(
@@ -535,7 +535,6 @@ def test_whole_package_extended(go_project_extended: Path) -> None:
         mdx_config={},
     )
     handler.collect(identifier, GoOptions())
-    print(handler._collected[identifier])
     assert handler._collected[identifier] == {
         "type": "package",
         "doc": "package says hello\n",
