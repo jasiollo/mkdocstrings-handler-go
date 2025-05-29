@@ -35,7 +35,7 @@
       {% endfilter %}
 
       {% block signature scoped %}
-        {% filter format_const_signature(data, config.line_length) %}
+        {% filter format_const_signature(data) %}
           {{ data.names[0] }}
         {% endfilter %}
       {% endblock %}
