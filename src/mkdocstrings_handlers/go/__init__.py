@@ -17,6 +17,7 @@ from mkdocstrings_handlers.go._internal.rendering import (
     do_format_struct_signature,
     do_format_types,
     do_get_template,
+    do_format_code,
 )
 
 __all__ = [
@@ -32,4 +33,5 @@ __all__ = [
     "do_get_template",
     "find_dicts_with_value",
     "get_handler",
+    "do_format_code",
 ]
