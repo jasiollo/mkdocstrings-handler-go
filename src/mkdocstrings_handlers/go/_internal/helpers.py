@@ -1,5 +1,5 @@
 import os
-from typing import Any, Callable, List, Optional, Union
+from typing import Any, Callable, Optional, Union
 
 
 # --- JSON Utilities ---
@@ -27,7 +27,6 @@ def _find_dicts_with_value(obj: Any, target_key: str, target_value: str) -> list
 def _find_string_in_go_files(
     search_dir: str,
     search_string: str,
-    type: str,
 ) -> Optional[tuple[str, int]]:
     """Search for a string in .go files and return (filepath, line number) of the first match."""
     for root, _, files in os.walk(search_dir):
@@ -54,7 +53,7 @@ def _get_rel_path(pkg_path: str, path: str) -> str:
 
 
 # --- Go Code Utilities ---
-def _extract_go_block(lines: List[str], start_line: int, block_type: str) -> List[str]:
+def _extract_go_block(lines: list[str], start_line: int, block_type: str) -> list[str]:
     """Extract a Go code block starting from a specific line number."""
     start_line -= 1  # Convert to 0-based
     block = []
@@ -63,7 +62,7 @@ def _extract_go_block(lines: List[str], start_line: int, block_type: str) -> Lis
         opener, closer = "{", "}"
     elif block_type in {"const", "var"}:
         line = lines[start_line].strip()
-        if line.startswith("const (") or line.startswith("var ("):
+        if line.startswith(("const (", "var (")):
             opener, closer = "(", ")"
         else:
             return [lines[start_line]]

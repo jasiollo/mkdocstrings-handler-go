@@ -9,7 +9,7 @@ import subprocess
 import sys
 from os.path import expanduser
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, ClassVar, Optional
+from typing import TYPE_CHECKING, Any, ClassVar
 
 from mkdocs.exceptions import PluginError
 from mkdocstrings import BaseHandler, CollectorItem, get_logger
@@ -65,6 +65,8 @@ class GoHandler(BaseHandler):
 
     fallback_theme: ClassVar[str] = "material"
     """The theme to fallback to."""
+
+    MAX_OBJECT_PARTS = 2  # Maximum parts after the package: Type.Method
 
     def __init__(
         self,
@@ -151,7 +153,7 @@ class GoHandler(BaseHandler):
         if not identifier:
             raise ValueError("Identifier cannot be empty!")
 
-        opts = options or self.get_options({})
+        _ = options or self.get_options({})
 
         pkg_path, obj, method, base_dir = self._parse_identifier(identifier)
         self._pkg_path = pkg_path
@@ -159,10 +161,7 @@ class GoHandler(BaseHandler):
         valid_path = self._resolve_valid_path(pkg_path, base_dir)
         raw_data = self._run_godocjson(valid_path)
 
-        if not obj:
-            filtered = [raw_data]
-        else:
-            filtered = self._filter_data(raw_data, obj, method)
+        filtered = [raw_data] if not obj else self._filter_data(raw_data, obj, method)
 
         if not filtered:
             raise ValueError(f"No data found for identifier: '{identifier}'")
@@ -233,7 +232,7 @@ class GoHandler(BaseHandler):
     def _parse_identifier(
         self,
         identifier: str,
-    ) -> tuple[str, Optional[str], Optional[str], Optional[str]]:
+    ) -> tuple[str, str | None, str | None, str | None]:
         """Parse the identifier into components.
 
         Parameters:
@@ -246,18 +245,19 @@ class GoHandler(BaseHandler):
         obj = method = None
         base_dir = None  # Not used anymore in path logic
 
-        if len(objects) > 2:
+        if len(objects) > self.MAX_OBJECT_PARTS:
             raise ValueError(
                 f"Invalid FQN: '{identifier}'. Max format: 'package.Type.Method'",
             )
-        if len(objects) == 2:
+
+        if len(objects) == self.MAX_OBJECT_PARTS:
             obj, method = objects
         elif len(objects) == 1:
             obj = objects[0]
 
         return pkg_path, obj, method, base_dir
 
-    def _resolve_valid_path(self, pkg_path: str, _: Optional[str] = None) -> Path:
+    def _resolve_valid_path(self, pkg_path: str, _: str | None = None) -> Path:
         """Resolve the valid Go package path based on configured search paths.
 
         Parameters:
@@ -356,8 +356,8 @@ class GoHandler(BaseHandler):
         try:
             with open(path) as f:
                 lines = f.readlines()
-        except FileNotFoundError:
-            raise FileNotFoundError(f"Source file not found at: {path}")
+        except FileNotFoundError as err:
+            raise FileNotFoundError(f"Source file not found at: {path}") from err
 
         block = _extract_go_block(lines, start_line=line_nr, block_type=type_name)
         code = "".join(block)
@@ -385,7 +385,7 @@ class GoHandler(BaseHandler):
             ValueError: If the required fields are missing in the item.
         """
         if type_name == "type":
-            return _find_string_in_go_files(item["packageImportPath"], obj, type_name)
+            return _find_string_in_go_files(item["packageImportPath"], obj)
 
         path = item.get("filename")
         if not path:
