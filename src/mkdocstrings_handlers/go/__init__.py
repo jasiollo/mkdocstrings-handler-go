@@ -12,12 +12,12 @@ from mkdocstrings_handlers.go._internal.handler import (
     get_handler,
 )
 from mkdocstrings_handlers.go._internal.rendering import (
+    do_format_code,
     do_format_const_signature,
     do_format_signature,
     do_format_struct_signature,
     do_format_types,
     do_get_template,
-    do_format_code,
 )
 
 __all__ = [
@@ -27,11 +27,11 @@ __all__ = [
     "GoInputOptions",
     "GoOptions",
     "_find_dicts_with_value",
+    "do_format_code",
     "do_format_const_signature",
     "do_format_signature",
     "do_format_struct_signature",
     "do_format_types",
     "do_get_template",
     "get_handler",
-    "do_format_code",
 ]

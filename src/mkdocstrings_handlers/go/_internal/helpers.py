@@ -4,7 +4,16 @@ from typing import Any, Callable, Optional, Union
 
 # --- JSON Utilities ---
 def _find_dicts_with_value(obj: Any, target_key: str, target_value: str) -> list[dict]:
-    """Recursively find all dicts containing a specific key-value pair."""
+    """Recursively find all dicts containing a specific key-value pair.
+
+    Parameters:
+        obj: The dictionary or list to search within.
+        target_key: The key to look for.
+        target_value: The value to match against.
+
+    Returns:
+        A list of dictionaries where the key-value pair is found.
+    """
     results = []
 
     if isinstance(obj, dict):
@@ -28,7 +37,15 @@ def _find_string_in_go_files(
     search_dir: str,
     search_string: str,
 ) -> Optional[tuple[str, int]]:
-    """Search for a string in .go files and return (filepath, line number) of the first match."""
+    """Search for a string in Go files within a directory.
+
+    Parameters:
+        search_dir: The root directory to search.
+        search_string: The string to search for in the files.
+
+    Returns:
+        A tuple of the file path and line number of the first match, or None if not found.
+    """
     for root, _, files in os.walk(search_dir):
         for file in files:
             if file.endswith(".go"):
@@ -47,14 +64,31 @@ def _find_string_in_go_files(
 
 
 def _get_rel_path(pkg_path: str, path: str) -> str:
-    """Get the relative path inside the Go module directory."""
+    """Get the relative path from the package path within a full file path.
+
+    Parameters:
+        pkg_path: The Go package path.
+        path: The full file path.
+
+    Returns:
+        The relative path starting from the package directory, or the full path if not found.
+    """
     index = path.find(pkg_path)
     return path[index:] if index != -1 else path
 
 
 # --- Go Code Utilities ---
 def _extract_go_block(lines: list[str], start_line: int, block_type: str) -> list[str]:
-    """Extract a Go code block starting from a specific line number."""
+    """Extract a Go code block from source lines based on block type.
+
+    Parameters:
+        lines: The list of lines from the Go source file.
+        start_line: The 1-based line number to start extraction.
+        block_type: The type of Go block ('func', 'type', 'const', 'var').
+
+    Returns:
+        A list of lines representing the extracted block.
+    """
     start_line -= 1  # Convert to 0-based
     block = []
 
@@ -86,7 +120,15 @@ def _extract_go_block(lines: list[str], start_line: int, block_type: str) -> lis
 
 
 def _inject_code_info(obj: Union[dict, list], find_code_fn: Callable) -> None:
-    """Recursively inject code and relative path into documentation objects."""
+    """Inject code snippets and relative paths into documentation data.
+
+    Parameters:
+        obj: The documentation object or list of objects to modify.
+        find_code_fn: The function used to locate and extract code snippets.
+
+    Returns:
+        None
+    """
     if isinstance(obj, dict):
         obj_type = obj.get("type")
         name = obj.get("name")
