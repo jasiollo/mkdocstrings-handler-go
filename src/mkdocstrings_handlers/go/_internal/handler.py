@@ -341,7 +341,7 @@ class GoHandler(BaseHandler):
         Returns:
             A tuple of (code block as a string, relative path to source file).
         """
-        type_name = item.get("type")
+        type_name = item["type"]
 
         if type_name == "package":
             # Package-level injection (possibly modifies the item in-place)
@@ -385,17 +385,21 @@ class GoHandler(BaseHandler):
             ValueError: If the required fields are missing in the item.
         """
         if type_name == "type":
-            return _find_string_in_go_files(item["packageImportPath"], obj)
+            if obj is None:
+                raise ValueError("Object name is required for resolving type location")
+            result = _find_string_in_go_files(item["packageImportPath"], obj)
+            if result is None:
+                raise FileNotFoundError(
+                    f"Could not find '{obj}' in {item['packageImportPath']}",
+                )
+            return result
 
         path = item.get("filename")
         if not path:
-            raise ValueError(
-                "Field 'filename' not found. Possibly incorrect package name?",
-            )
-
+            raise ValueError("Field 'filename' not found in item")
         line_nr = item.get("line")
         if line_nr is None:
-            raise ValueError("Line number missing in item.")
+            raise ValueError("Field 'line' not found in item")
 
         return path, line_nr
 
