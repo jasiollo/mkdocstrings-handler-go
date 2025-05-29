@@ -59,7 +59,20 @@ def do_format_code(
     line_length: int,
     format_code: bool,
 ) -> str:
-    """Format source code block."""
+    """Format source code block.
+
+    Parameters:
+        code: go code to format
+        line_length: line length specified in GoOptions
+        format_code: flag wether to perform formatting specified in GoOptions
+
+
+    Formats given code bloc using golines formatter.
+    If golines is unavailable code is left unformatted.
+
+    Returns:
+        The same code, formatted.
+    """
     if not format_code or not isfile(expanduser("~/go/bin/golines")):
         return code
     formatted = subprocess.run( # noqa: S603
@@ -87,6 +100,9 @@ def do_format_signature(
         callable_path: The path of the callable we render the signature of.
         function: The function we render the signature of.
         line_length: The line length.
+
+    Formats given signature using golines formatter.
+    If golines is unavailable code is left unformatted.
 
     Returns:
         The same code, formatted.
