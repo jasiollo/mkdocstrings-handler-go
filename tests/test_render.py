@@ -182,6 +182,8 @@ def test_render_struct(handler: handler.GoHandler) -> None:
                 "vars": [],
                 "funcs": [],
                 "methods": [],
+                "code": "",
+                "relative_path": "",
             },
         ],
         "vars": [],
