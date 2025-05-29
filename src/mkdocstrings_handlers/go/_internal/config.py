@@ -122,6 +122,14 @@ class GoInputOptions:
         ),
     ] = True
 
+    show_root_const: Annotated[
+        bool,
+        _Field(
+            group="general",
+            description="Show const and interfaces if they are root of collected objects.",
+        ),
+    ] = True
+
     show_source: Annotated[
         bool,
         _Field(

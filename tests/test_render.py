@@ -270,3 +270,46 @@ def test_render_const(handler: handler.GoHandler) -> None:
    </div>
 </div>"""
     assert normalize_html(res) == normalize_html(html)
+
+
+
+def test_const_alone(handler : handler.GoHandler) -> None:
+    data_json= {
+        "packageName": "utils",
+        "packageImportPath": "test_folder",
+        "doc": "Another constant\n",
+        "names": ["Number"],
+        "type": "const",
+        "filename": "helper.go",
+        "line": 11,
+        "relative_path": "pkg/helper.go",
+        "code": "    const Number = 777\n",
+    }
+    #  {
+    #             "packageName": "utils",
+    #             "packageImportPath": "test_folder",
+    #             "doc": "Another constant\n",
+    #             "names": [
+    #                 "Number",
+    #             ],
+    #             "type": "const",
+    #             "filename": "test_folder/hander.go",
+    #             "line": 5,
+    #         },
+    html = handler.render(data_json, config.GoOptions(show_symbol_type_heading=True, show_root_heading=True))
+    res = """<div class="doc doc-object doc-const">
+
+
+
+            <h2 id="helper.go" class="doc doc-heading">            <code class="doc-symbol doc-symbol-heading doc-symbol-const"></code>
+                    <span class="doc doc-object-name doc-object-const-name">Number</span>
+            </h2>
+            <div class="doc-signature highlight"><pre><span></span><code><span class="kd">const</span><span class="w"> </span><span class="nx">Number</span>
+            </code></pre></div>
+                <div class="doc doc-contents first">
+                        Another constant
+
+                </div>
+            </div>"""
+    assert normalize_html(html) == normalize_html(res)
+
