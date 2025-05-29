@@ -52,7 +52,7 @@ func (m MyType) Method() string {
 
 
 @pytest.fixture
-def go_project_many_files(tmp_path: str) -> str:
+def go_project_many_files(tmp_path: Path) -> Path:
     mod_path = tmp_path / "mymod"
     pkg_path = mod_path / "pkg" / "utils"
     pkg_path.mkdir(parents=True)
