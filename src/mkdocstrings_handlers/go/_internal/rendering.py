@@ -141,7 +141,6 @@ def do_format_struct_signature(
         context: Jinja context
         struct_path: Path to the struct (used as label)
         struct: Struct object with name, fields, etc.
-        line_length: Max line length
 
     Returns:
         Highlighted formatted signature
@@ -176,7 +175,6 @@ def do_format_const_signature(
         context: Jinja context
         const_path: Path to the const
         const: Const object
-        line_length: Max line length
 
     Returns:
         Highlighted const declaration
