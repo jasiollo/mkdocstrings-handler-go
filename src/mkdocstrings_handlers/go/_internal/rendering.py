@@ -51,14 +51,14 @@ def _format_signature(name: Markup, signature: str, line_length: int) -> str:
     return code.replace(", ", ",\n")
 
 
-def _format_type_signature(name: Markup, signature: str, line_length: int) -> str:
+def _format_type_signature(signature: str) -> str:
     return signature.strip()
 
 
 def do_format_code(
     code: str,
     line_length: int,
-    format_code: bool,
+    format_code: bool, # noqa: FBT001
 ) -> str:
     """Format source code block.
 
@@ -132,9 +132,8 @@ def do_format_signature(
 @pass_context
 def do_format_struct_signature(
     context: Context,
-    struct_path: Markup,
+    struct_path: Markup, #noqa: ARG001
     struct: dict,
-    line_length: int,
 ) -> str:
     """Format a Go struct type signature.
 
@@ -152,7 +151,7 @@ def do_format_struct_signature(
 
     new_context = context.parent
     signature = template.render(new_context, struct=struct, signature=True)
-    signature = _format_type_signature(struct_path, signature, line_length)
+    signature = _format_type_signature(signature)
 
     return str(
         env.filters["highlight"](
@@ -168,9 +167,8 @@ def do_format_struct_signature(
 @pass_context
 def do_format_const_signature(
     context: Context,
-    const_path: Markup,
+    const_path: Markup, # noqa: ARG001
     const: dict,
-    line_length: int,
 ) -> str:
     """Format a Go const declaration.
 
@@ -188,7 +186,7 @@ def do_format_const_signature(
 
     new_context = context.parent
     signature = template.render(new_context, const=const, signature=True)
-    signature = _format_type_signature(const_path, signature, line_length)
+    signature = _format_type_signature(signature)
 
     return str(
         env.filters["highlight"](

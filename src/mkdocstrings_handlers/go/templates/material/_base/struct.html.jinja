@@ -44,7 +44,7 @@ Context:
       {% endfilter %}
 
       {% block signature scoped %}
-        {% filter format_struct_signature(data, config.line_length) %}
+        {% filter format_struct_signature(data) %}
           {{ data.name }}
         {% endfilter %}
       {% endblock %}
